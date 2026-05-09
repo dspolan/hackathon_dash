@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SECOP II — Monitor de Corrupción en Contratación Pública</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c0f;
+  --bg2: #11141a;
+  --bg3: #181c24;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e8eaf0;
+  --text2: #8a90a0;
+  --text3: #555c70;
+  --red: #e84545;
+  --red-dim: rgba(232,69,69,0.12);
+  --red-glow: rgba(232,69,69,0.25);
+  --amber: #f5a623;
+  --amber-dim: rgba(245,166,35,0.12);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.1);
+  --teal: #14b8a6;
+  --accent: #e84545;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── SCROLLBAR */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── HEADER */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,12,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.logo { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--red); text-transform: uppercase; }
+.logo-sep { color: var(--border2); }
+.header-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 500; color: var(--text2); }
+.header-right { display: flex; align-items: center; gap: 16px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.status-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); }
+.last-update { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); }
+
+/* ── MAIN LAYOUT */
+.main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+
+/* ── SECTION TITLE */
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-left: 2px;
+}
+
+/* ── KPI STRIP */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+@media(max-width:900px){ .kpi-grid{ grid-template-columns: repeat(3,1fr); } }
+@media(max-width:520px){ .kpi-grid{ grid-template-columns: repeat(2,1fr); } }
+
+.kpi {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.kpi:hover { border-color: var(--border2); }
+.kpi::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent-color, var(--border2));
+  opacity: 0.7;
+}
+.kpi.red { --accent-color: var(--red); }
+.kpi.amber { --accent-color: var(--amber); }
+.kpi.blue { --accent-color: var(--blue); }
+.kpi.green { --accent-color: var(--green); }
+
+.kpi-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.kpi-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; color: var(--text); }
+.kpi.red .kpi-value { color: var(--red); }
+.kpi.amber .kpi-value { color: var(--amber); }
+.kpi.green .kpi-value { color: var(--green); }
+.kpi-sub { font-size: 10px; color: var(--text3); margin-top: 5px; }
+.kpi-delta { font-family: 'DM Mono', monospace; font-size: 10px; margin-top: 4px; }
+.kpi-delta.up { color: var(--red); }
+.kpi-delta.down { color: var(--green); }
+
+/* ── MAIN GRID */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media(max-width:960px){ .content-grid{ grid-template-columns: 1fr; } }
+
+/* ── PANEL */
+.panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title .dot { width: 6px; height: 6px; border-radius: 50%; }
+.panel-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* ── MAP */
+#map-container { position: relative; height: 420px; }
+#colombia-map { width: 100%; height: 100%; }
+.map-tooltip {
+  position: absolute;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  pointer-events: none;
+  display: none;
+  z-index: 20;
+  min-width: 180px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.map-tooltip .tt-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.map-tooltip .tt-row { display: flex; justify-content: space-between; gap: 16px; font-size: 11px; color: var(--text2); margin-top: 3px; }
+.map-tooltip .tt-val { font-family: 'DM Mono', monospace; color: var(--text); }
+
+.map-legend { display: flex; align-items: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.map-legend-label { font-size: 10px; color: var(--text3); }
+.legend-gradient { height: 6px; flex: 1; border-radius: 3px; max-width: 200px; background: linear-gradient(to right, #1a2535, #e84545); }
+.legend-min, .legend-max { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+
+/* ── CASOS LIST */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-bar select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 11px;
+  font-family: 'DM Sans', sans-serif;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.filter-bar select:hover { border-color: var(--border2); }
+
+.casos-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
+
+.caso-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.caso-card:hover { border-color: var(--border2); background: rgba(255,255,255,0.02); }
+.caso-card.selected { border-color: var(--red); background: var(--red-dim); }
+
+.score-ring {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500;
+  flex-shrink: 0;
+  border: 2px solid;
+}
+.score-ring.muy-alto { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+.score-ring.alto { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+.score-ring.medio { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+.score-ring.bajo { border-color: var(--text3); color: var(--text3); background: var(--bg2); }
+
+.caso-ref { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text); font-weight: 500; }
+.caso-entidad { font-size: 11px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.caso-depto { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.caso-flags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.flag-chip {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'DM Mono', monospace;
+  border: 1px solid;
+}
+.flag-chip.red { background: var(--red-dim); color: var(--red); border-color: rgba(232,69,69,0.3); }
+.flag-chip.amb { background: var(--amber-dim); color: var(--amber); border-color: rgba(245,166,35,0.3); }
+.flag-chip.blu { background: var(--blue-dim); color: var(--blue); border-color: rgba(59,130,246,0.3); }
+
+/* ── BOTTOM GRID */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media(max-width:900px){ .bottom-grid{ grid-template-columns: 1fr 1fr; } }
+@media(max-width:560px){ .bottom-grid{ grid-template-columns: 1fr; } }
+
+/* ── CHART WRAPPER */
+.chart-wrap { position: relative; width: 100%; }
+
+/* ── DETAIL PANEL */
+.detail-panel {
+  background: var(--bg2);
+  border: 1px solid var(--red);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+  display: none;
+  animation: slideIn 0.2s ease;
+}
+.detail-panel.visible { display: block; }
+@keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+
+.detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.detail-ref { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; color: var(--red); }
+.detail-nivel { font-size: 11px; color: var(--text2); margin-top: 3px; }
+.close-btn {
+  background: none; border: none; color: var(--text3); cursor: pointer;
+  font-size: 18px; line-height: 1; padding: 2px;
+  transition: color 0.15s;
+}
+.close-btn:hover { color: var(--text); }
+
+.detail-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 16px; }
+@media(max-width:600px){ .detail-grid{ grid-template-columns: 1fr 1fr; } }
+.detail-item label { font-size: 10px; color: var(--text3); display: block; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+.detail-item span { font-size: 13px; color: var(--text); font-weight: 500; }
+
+.detail-objeto {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--red);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 12px; color: var(--text2);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.detail-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.detail-flag {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--red);
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+.score-bar-wrap { margin-top: 4px; }
+.score-bar-track { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.score-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.score-bar-fill.muy-alto { background: var(--red); }
+.score-bar-fill.alto { background: var(--amber); }
+.score-bar-fill.medio { background: var(--blue); }
+
+/* ── FOOTER */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-text { font-size: 11px; color: var(--text3); }
+.footer-sources { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+.footer-link { color: var(--text2); text-decoration: none; }
+.footer-link:hover { color: var(--text); }
+
+/* ── TABS */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.tab-btn {
+  font-family: 'DM Sans', sans-serif; font-size: 12px;
+  padding: 8px 14px; cursor: pointer; color: var(--text3);
+  border: none; background: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: var(--text2); }
+.tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <span class="logo">SECOP II</span>
+    <span class="logo-sep">|</span>
+    <span class="header-title">Monitor de Anomalías en Contratación Pública</span>
+  </div>
+  <div class="header-right">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="status-dot"></div>
+      <span class="status-text">Datos en vivo</span>
+    </div>
+    <span class="last-update" id="last-update">—</span>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- KPIs -->
+  <div class="section-label">Resumen general</div>
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <!-- DETAIL PANEL (hidden until selection) -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-header">
+      <div>
+        <div class="detail-ref" id="d-ref"></div>
+        <div class="detail-nivel" id="d-nivel"></div>
+      </div>
+      <button class="close-btn" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-objeto" id="d-objeto"></div>
+    <div class="detail-grid" id="d-grid"></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em;">Anomalías detectadas</div>
+    <div class="detail-flags" id="d-flags"></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em;">Score de riesgo</div>
+    <div class="score-bar-wrap">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-family:'DM Mono',monospace;font-size:12px;" id="d-score-text"></span>
+        <span style="font-size:11px;color:var(--text3);">/ 100</span>
+      </div>
+      <div class="score-bar-track"><div class="score-bar-fill" id="d-score-bar"></div></div>
+    </div>
+    <div style="margin-top:14px;font-size:11px;color:var(--text3);">
+      <a href="#" id="d-doc-link" style="color:var(--blue);text-decoration:none;" target="_blank">Ver documento fuente →</a>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT GRID -->
+  <div class="content-grid">
+
+    <!-- LEFT: MAP -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <div class="dot" style="background:var(--red);box-shadow:0 0 6px var(--red);"></div>
+          Mapa de riesgo por departamento
+        </div>
+        <span class="panel-badge" id="map-badge">Colombia · 32 dptos.</span>
+      </div>
+      <div id="map-container">
+        <svg id="colombia-map" role="img" aria-label="Mapa coroplético de Colombia con niveles de riesgo de corrupción por departamento"></svg>
+        <div class="map-tooltip" id="map-tooltip">
+          <div class="tt-name" id="tt-name"></div>
+          <div class="tt-row"><span>Contratos anómalos</span><span class="tt-val" id="tt-casos"></span></div>
+          <div class="tt-row"><span>Score promedio</span><span class="tt-val" id="tt-score"></span></div>
+          <div class="tt-row"><span>Riesgo muy alto</span><span class="tt-val" id="tt-alto"></span></div>
+          <div class="tt-row"><span>Valor en riesgo</span><span class="tt-val" id="tt-valor"></span></div>
+        </div>
+      </div>
+      <div class="map-legend">
+        <span class="legend-min">Bajo</span>
+        <div class="legend-gradient"></div>
+        <span class="legend-max">Muy alto</span>
+        <span class="map-legend-label" style="margin-left:12px;">Índice de riesgo de corrupción</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: CASOS -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">
+          <div class="dot" style="background:var(--amber);box-shadow:0 0 6px var(--amber);"></div>
+          Casos detectados
+        </div>
+        <span class="panel-badge" id="casos-count-badge">—</span>
+      </div>
+      <div class="filter-bar">
+        <select id="filter-nivel" onchange="renderCasos()">
+          <option value="">Todos los niveles</option>
+          <option value="MUY ALTO">Muy alto</option>
+          <option value="ALTO">Alto</option>
+          <option value="MEDIO">Medio</option>
+          <option value="BAJO">Bajo</option>
+        </select>
+        <select id="filter-depto" onchange="renderCasos()">
+          <option value="">Todos los dptos.</option>
+        </select>
+      </div>
+      <div class="casos-list" id="casos-list"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM CHARTS -->
+  <div class="bottom-grid">
+
+    <!-- ANOMALÍAS POR TIPO -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Tipos de anomalía</div>
+      </div>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="chartFlags" role="img" aria-label="Barras horizontales de cantidad de contratos por tipo de anomalía detectada">Anomalías por tipo de flag.</canvas>
+      </div>
+    </div>
+
+    <!-- TOP DEPARTAMENTOS -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Top departamentos</div>
+      </div>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="chartDeptos" role="img" aria-label="Top 8 departamentos con más contratos anómalos">Top departamentos con contratos anómalos.</canvas>
+      </div>
+    </div>
+
+    <!-- DISTRIBUCIÓN DE SCORES -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Distribución de riesgo</div>
+      </div>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="chartScores" role="img" aria-label="Distribución porcentual de niveles de riesgo de corrupción">Distribución de niveles de riesgo.</canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TABLA COMPLETA -->
+  <div class="panel" style="margin-bottom:24px;">
+    <div class="panel-head">
+      <div class="panel-title">Tabla de contratos anómalos</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="search-input" placeholder="Buscar referencia o entidad..." oninput="renderTabla()"
+          style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:11px;font-family:'DM Sans',sans-serif;padding:5px 10px;border-radius:6px;outline:none;width:220px;">
+        <span class="panel-badge" id="tabla-count">—</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table id="tabla-contratos" style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="text-align:left;padding:8px 10px;color:var(--text3);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;" onclick="sortTabla('ref')">Referencia ↕</th>
+            <th style="text-align:left;padding:8px 10px;color:var(--text3);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Departamento</th>
+            <th style="text-align:left;padding:8px 10px;color:var(--text3);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Entidad</th>
+            <th style="text-align:left;padding:8px 10px;color:var(--text3);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Tipo</th>
+            <th style="text-align:right;padding:8px 10px;color:var(--text3);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;" onclick="sortTabla('valor')">Valor (COP) ↕</th>
+            <th style="text-align:center;padding:8px 10px;color:var(--text3);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;cursor:pointer;" onclick="sortTabla('score')">Score ↕</th>
+            <th style="text-align:center;padding:8px 10px;color:var(--text3);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Nivel</th>
+            <th style="text-align:center;padding:8px 10px;color:var(--text3);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;">Flags</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-text">Monitor SECOP II · Detección de anomalías en contratación pública de Colombia · Datos simulados para demo</div>
+  <div class="footer-sources">
+    Fuentes: <a class="footer-link" href="https://www.datos.gov.co/resource/jbjy-vk9h.json" target="_blank">jbjy-vk9h</a>
+    &nbsp;+&nbsp;
+    <a class="footer-link" href="https://www.datos.gov.co/resource/p6dx-8zbt.json" target="_blank">p6dx-8zbt</a>
+    &nbsp;·&nbsp; datos.gov.co
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+// DATOS DE DEMOSTRACIÓN
+// En producción: reemplazar con llamadas a tu pipeline Python
+// ═══════════════════════════════════════════════════════
+
+const DEPTOS = [
+  "AMAZONAS","ANTIOQUIA","ARAUCA","ATLÁNTICO","BOLÍVAR","BOYACÁ","CALDAS",
+  "CAQUETÁ","CASANARE","CAUCA","CESAR","CHOCÓ","CÓRDOBA","CUNDINAMARCA",
+  "GUAINÍA","GUAVIARE","HUILA","LA GUAJIRA","MAGDALENA","META","NARIÑO",
+  "NORTE DE SANTANDER","PUTUMAYO","QUINDÍO","RISARALDA","SAN ANDRÉS",
+  "SANTANDER","SUCRE","TOLIMA","VALLE DEL CAUCA","VAUPÉS","VICHADA"
+];
+
+const ENTIDADES = [
+  "Gobernación","Alcaldía Municipal","INVIAS Seccional","SENA Regional",
+  "IDU","Ministerio de Salud","Ministerio de Educación","Agencia Nacional",
+  "Hospital Regional","Secretaría de Obras","ESE Hospital","ICBF Regional"
+];
+
+const TIPOS = [
+  "PRESTACIÓN DE SERVICIOS","OBRA PÚBLICA","SUMINISTRO",
+  "CONSULTORÍA","CONCESIÓN","CONTRATO INTERADMINISTRATIVO"
+];
+
+const OBJETOS = [
+  "Construcción de vía terciaria sector rural sin especificaciones técnicas completas",
+  "Consultoría para elaboración de estudios previos – objeto sin delimitación",
+  "Suministro de elementos de oficina sin descripción de cantidades ni especificaciones",
+  "Mantenimiento de infraestructura educativa municipios priorizados",
+  "Interventoría técnica de obras de alcantarillado urbano",
+  "Adquisición de equipos médicos hospitalarios de alta complejidad",
+  "Dotación de mobiliario escolar para instituciones municipales",
+  "Contratación directa de servicios de vigilancia y seguridad",
+  "Obra de pavimentación urbana sin diseño geotécnico",
+  "Prestación de servicios de aseo y cafetería institucional",
+  "Construcción de planta de tratamiento de agua residual",
+  "Diseño e implementación de sistema de información territorial",
+];
+
+const FLAGS_ALL = [
+  {key:"A1_zscore",label:"Z-score extremo",cls:"red"},
+  {key:"A2_iqr",label:"IQR outlier",cls:"red"},
+  {key:"A3_cero",label:"Valor ≤ 0",cls:"red"},
+  {key:"A4_duracion",label:"Duración anómala",cls:"amb"},
+  {key:"A5_firma",label:"Firma futura",cls:"red"},
+  {key:"A6_adicion",label:"Adición excesiva",cls:"amb"},
+  {key:"A7_nulos",label:"Campos nulos",cls:"blu"},
+  {key:"A8_vago",label:"Objeto vago",cls:"blu"},
+  {key:"A9_dia",label:"Valor/día outlier",cls:"amb"},
+];
+
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function fmtCOP(v){return "$"+new Intl.NumberFormat("es-CO").format(Math.round(v));}
+function fmtM(v){return "$"+(v/1e9).toFixed(1)+"B";}
+
+// Semilla fija para reproducibilidad en demo
+let seed=42;
+function srnd(a,b){seed=(seed*9301+49297)%233280;return a+Math.floor((seed/233280)*(b-a+1));}
+function spick(arr){seed=(seed*9301+49297)%233280;return arr[Math.floor((seed/233280)*arr.length)];}
+
+function genContratos(n){
+  const arr=[];
+  for(let i=0;i<n;i++){
+    const depto=spick(DEPTOS);
+    const nF=srnd(0,6);
+    const flags=FLAGS_ALL.slice().sort(()=>{seed=(seed*9301+49297)%233280;return (seed/233280)-0.5;}).slice(0,nF);
+    const score=Math.min(100,Math.round(nF/FLAGS_ALL.length*100+srnd(0,25)));
+    const nivel=score>=80?"MUY ALTO":score>=60?"ALTO":score>=40?"MEDIO":score>=20?"BAJO":"MUY BAJO";
+    const valor=srnd(5,8000)*1e6;
+    arr.push({
+      id:i,ref:"CON-2024-"+String(srnd(100000,999999)),
+      entidad:spick(ENTIDADES)+" de "+depto.split(" ")[0],
+      depto,tipo:spick(TIPOS),objeto:spick(OBJETOS),
+      valor,valor_adic:srnd(0,1)?srnd(5,valor*2/1e6)*1e6:null,
+      dias:srnd(-15,4500),score,nivel,flags,
+      url:"https://www.datos.gov.co/resource/jbjy-vk9h/"+srnd(100000,999999)
+    });
+  }
+  return arr.sort((a,b)=>b.score-a.score);
+}
+
+const CONTRATOS = genContratos(320);
+const ANOMALOS  = CONTRATOS.filter(c=>c.score>=25);
+
+// Agrupación por departamento
+const POR_DEPTO = {};
+DEPTOS.forEach(d=>{ POR_DEPTO[d]={n:0,score_sum:0,muy_alto:0,valor:0}; });
+ANOMALOS.forEach(c=>{
+  if(!POR_DEPTO[c.depto]) return;
+  POR_DEPTO[c.depto].n++;
+  POR_DEPTO[c.depto].score_sum+=c.score;
+  POR_DEPTO[c.depto].valor+=c.valor;
+  if(c.nivel==="MUY ALTO") POR_DEPTO[c.depto].muy_alto++;
+});
+
+// ═══════════════════════════════════════════════════════
+// KPIs
+// ═══════════════════════════════════════════════════════
+function initKPIs(){
+  const totalValor = ANOMALOS.reduce((s,c)=>s+c.valor,0);
+  const kpis=[
+    {label:"Contratos analizados",val:CONTRATOS.length.toLocaleString("es-CO"),sub:"Dataset completo",cls:""},
+    {label:"Anomalías detectadas",val:ANOMALOS.length.toLocaleString("es-CO"),sub:"Score ≥ 25",cls:"amber"},
+    {label:"Riesgo muy alto",val:CONTRATOS.filter(c=>c.nivel==="MUY ALTO").length.toLocaleString("es-CO"),sub:"Score ≥ 80",cls:"red"},
+    {label:"Valor en riesgo",val:"$"+Math.round(totalValor/1e12*10)/10+"B",sub:"COP estimado",cls:"red"},
+    {label:"Dptos. críticos",val:Object.values(POR_DEPTO).filter(d=>d.muy_alto>=2).length,sub:"Con ≥2 casos muy alto",cls:"amber"},
+    {label:"PDFs indexados",val:"143",sub:"Listos para revisión IA",cls:"green"},
+  ];
+  document.getElementById("kpi-grid").innerHTML=kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join("");
+}
+
+// ═══════════════════════════════════════════════════════
+// MAPA DE COLOMBIA
+// ═══════════════════════════════════════════════════════
+// Mapa SVG simplificado de Colombia por departamentos (paths aproximados)
+// En producción reemplazar por fetch de topojson real
+const COLOMBIA_APPROX = {
+  "ANTIOQUIA":     "M160,160 L230,150 L250,200 L230,240 L180,250 L150,220 Z",
+  "CUNDINAMARCA":  "M220,230 L270,220 L280,260 L250,290 L210,280 Z",
+  "VALLE DEL CAUCA":"M140,240 L190,230 L200,280 L170,310 L130,300 Z",
+  "ATLÁNTICO":     "M210,90 L240,85 L245,110 L215,115 Z",
+  "BOLÍVAR":       "M180,105 L230,95 L240,145 L200,155 L170,140 Z",
+  "SANTANDER":     "M230,155 L280,145 L290,195 L250,205 L225,195 Z",
+  "NORTE DE SANTANDER":"M260,125 L310,120 L320,160 L275,168 L255,155 Z",
+  "BOYACÁ":        "M250,190 L300,180 L310,220 L270,230 L245,220 Z",
+  "CÓRDOBA":       "M155,120 L200,112 L210,155 L170,165 L148,150 Z",
+  "NARIÑO":        "M130,320 L180,310 L190,360 L145,370 L120,350 Z",
+  "CAUCA":         "M145,285 L195,275 L205,325 L160,335 L135,320 Z",
+  "HUILA":         "M215,285 L265,275 L270,325 L225,335 L208,320 Z",
+  "TOLIMA":        "M195,250 L245,240 L255,290 L210,300 L188,285 Z",
+  "MAGDALENA":     "M210,70 L260,65 L265,105 L220,115 L205,100 Z",
+  "CESAR":         "M255,80 L305,75 L310,115 L265,125 L250,110 Z",
+  "LA GUAJIRA":    "M245,45 L295,40 L300,80 L255,88 L240,75 Z",
+  "SUCRE":         "M168,108 L205,102 L210,130 L175,138 L163,125 Z",
+  "CHOCÓ":         "M100,145 L150,138 L158,195 L110,205 L90,188 Z",
+  "CALDAS":        "M178,202 L218,195 L224,228 L188,238 L173,224 Z",
+  "RISARALDA":     "M155,218 L192,212 L198,240 L165,250 L150,238 Z",
+  "QUINDÍO":       "M170,238 L200,232 L205,255 L177,262 Z",
+  "ANTIOQUIA":     "M125,145 L195,135 L210,185 L195,215 L155,225 L120,200 Z",
+  "META":          "M265,260 L335,248 L345,310 L280,320 L258,300 Z",
+  "CASANARE":      "M285,195 L355,185 L360,245 L295,255 L278,238 Z",
+  "ARAUCA":        "M285,145 L360,138 L365,185 L292,192 L278,178 Z",
+  "VICHADA":       "M340,210 L430,200 L435,280 L345,290 L335,268 Z",
+  "GUAINÍA":       "M370,285 L450,275 L455,355 L375,365 L362,340 Z",
+  "VAUPÉS":        "M330,325 L420,315 L425,395 L335,405 L322,380 Z",
+  "GUAVIARE":      "M295,310 L365,300 L370,350 L302,360 L288,342 Z",
+  "CAQUETÁ":       "M230,335 L310,322 L315,390 L235,402 L222,378 Z",
+  "PUTUMAYO":      "M175,370 L255,358 L258,415 L180,425 L168,405 Z",
+  "AMAZONAS":      "M210,415 L330,402 L335,500 L215,510 L200,480 Z",
+  "SAN ANDRÉS":    "M50,60 L70,55 L72,78 L52,80 Z",
+};
+
+function initMap(){
+  const svg=d3.select("#colombia-map");
+  const container=document.getElementById("map-container");
+  const W=container.clientWidth||580, H=420;
+  svg.attr("viewBox",`0 0 ${W} ${H}`);
+
+  const maxN=Math.max(...Object.values(POR_DEPTO).map(d=>d.n),1);
+  const colorScale=d3.scaleSequential([0,maxN],d3.interpolateRgb("#1a2535","#e84545"));
+
+  const tooltip=document.getElementById("map-tooltip");
+
+  Object.entries(COLOMBIA_APPROX).forEach(([nombre,path])=>{
+    const data=POR_DEPTO[nombre]||{n:0,score_sum:0,muy_alto:0,valor:0};
+    const fill=data.n===0?"#181c24":colorScale(data.n);
+    const scoreAvg=data.n>0?Math.round(data.score_sum/data.n):0;
+
+    svg.append("path")
+      .attr("d",path)
+      .attr("fill",fill)
+      .attr("stroke","#0a0c0f")
+      .attr("stroke-width",1.5)
+      .attr("cursor","pointer")
+      .style("transition","opacity 0.15s")
+      .on("mouseover",function(event){
+        d3.select(this).attr("opacity",0.8);
+        tooltip.style.display="block";
+        document.getElementById("tt-name").textContent=nombre;
+        document.getElementById("tt-casos").textContent=data.n.toLocaleString("es-CO");
+        document.getElementById("tt-score").textContent=scoreAvg;
+        document.getElementById("tt-alto").textContent=data.muy_alto.toLocaleString("es-CO");
+        document.getElementById("tt-valor").textContent=fmtM(data.valor);
+      })
+      .on("mousemove",function(event){
+        const rect=container.getBoundingClientRect();
+        const x=event.clientX-rect.left, y=event.clientY-rect.top;
+        tooltip.style.left=(x+12)+"px";
+        tooltip.style.top=(y-10)+"px";
+      })
+      .on("mouseout",function(){
+        d3.select(this).attr("opacity",1);
+        tooltip.style.display="none";
+      })
+      .on("click",function(){
+        document.getElementById("filter-depto").value=nombre;
+        renderCasos();
+        document.getElementById("casos-list").scrollIntoView({behavior:"smooth"});
+      });
+
+    if(data.n>0){
+      const pathEl=svg.node().lastChild;
+      const bbox=pathEl.getBBox();
+      svg.append("text")
+        .attr("x",bbox.x+bbox.width/2)
+        .attr("y",bbox.y+bbox.height/2+4)
+        .attr("text-anchor","middle")
+        .attr("font-size","8")
+        .attr("fill","rgba(255,255,255,0.6)")
+        .attr("pointer-events","none")
+        .text(data.n>0?data.n:"");
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CASOS LIST
+// ═══════════════════════════════════════════════════════
+function initDeptoFilter(){
+  const sel=document.getElementById("filter-depto");
+  DEPTOS.forEach(d=>{
+    const o=document.createElement("option");
+    o.value=d; o.textContent=d;
+    sel.appendChild(o);
+  });
+}
+
+let selectedId=null;
+
+function nivelClass(n){
+  return n==="MUY ALTO"?"muy-alto":n==="ALTO"?"alto":n==="MEDIO"?"medio":"bajo";
+}
+
+function renderCasos(){
+  const nivelF=document.getElementById("filter-nivel").value;
+  const deptoF=document.getElementById("filter-depto").value;
+  let list=ANOMALOS.filter(c=>{
+    if(nivelF && c.nivel!==nivelF) return false;
+    if(deptoF && c.depto!==deptoF) return false;
+    return true;
+  });
+  document.getElementById("casos-count-badge").textContent=list.length+" casos";
+  const container=document.getElementById("casos-list");
+  container.innerHTML=list.slice(0,60).map(c=>`
+    <div class="caso-card${c.id===selectedId?" selected":""}" onclick="selectCaso(${c.id})">
+      <div class="score-ring ${nivelClass(c.nivel)}">${c.score}</div>
+      <div style="min-width:0;">
+        <div class="caso-ref">${c.ref}</div>
+        <div class="caso-entidad">${c.entidad}</div>
+        <div class="caso-depto">${c.depto} · ${c.tipo}</div>
+        <div class="caso-flags">
+          ${c.flags.slice(0,4).map(f=>`<span class="flag-chip ${f.cls}">${f.label}</span>`).join("")}
+          ${c.flags.length>4?`<span class="flag-chip blu">+${c.flags.length-4}</span>`:""}
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+function selectCaso(id){
+  selectedId=id;
+  const c=CONTRATOS.find(x=>x.id===id);
+  if(!c) return;
+  renderCasos();
+  const panel=document.getElementById("detail-panel");
+  panel.classList.add("visible");
+  document.getElementById("d-ref").textContent=c.ref;
+  document.getElementById("d-nivel").textContent=`Nivel de riesgo: ${c.nivel} · ${c.tipo} · ${c.depto}`;
+  document.getElementById("d-objeto").textContent=c.objeto;
+  document.getElementById("d-flags").innerHTML=c.flags.map(f=>`<span class="detail-flag">${f.label}</span>`).join("")||"<span style='color:var(--text3);font-size:12px;'>Sin anomalías mayores detectadas</span>";
+  document.getElementById("d-grid").innerHTML=`
+    <div class="detail-item"><label>Entidad</label><span>${c.entidad}</span></div>
+    <div class="detail-item"><label>Valor del contrato</label><span>${fmtCOP(c.valor)}</span></div>
+    <div class="detail-item"><label>Valor con adiciones</label><span>${c.valor_adic?fmtCOP(c.valor_adic):"—"}</span></div>
+    <div class="detail-item"><label>Duración (días)</label><span>${c.dias<0?"⚠ "+c.dias:c.dias}</span></div>
+    <div class="detail-item"><label>Departamento</label><span>${c.depto}</span></div>
+    <div class="detail-item"><label>Anomalías detectadas</label><span>${c.flags.length} flags</span></div>
+  `;
+  const scoreBar=document.getElementById("d-score-bar");
+  scoreBar.className="score-bar-fill "+nivelClass(c.nivel);
+  scoreBar.style.width="0%";
+  document.getElementById("d-score-text").textContent=c.score+" / 100 — "+c.nivel;
+  document.getElementById("d-doc-link").href=c.url;
+  setTimeout(()=>{ scoreBar.style.width=c.score+"%"; },50);
+  panel.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function closeDetail(){
+  selectedId=null;
+  document.getElementById("detail-panel").classList.remove("visible");
+  renderCasos();
+}
+
+// ═══════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════
+const CHART_DEFAULTS = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{
+    backgroundColor:"#11141a", borderColor:"rgba(255,255,255,0.1)",
+    borderWidth:1, titleColor:"#e8eaf0", bodyColor:"#8a90a0",
+    padding:10, titleFont:{family:"'DM Mono',monospace",size:12},
+    bodyFont:{family:"'DM Sans',sans-serif",size:11}
+  }},
+};
+
+function initChartFlags(){
+  const counts={};
+  FLAGS_ALL.forEach(f=>{ counts[f.label]=0; });
+  ANOMALOS.forEach(c=>c.flags.forEach(f=>{ counts[f.label]=(counts[f.label]||0)+1; }));
+  const labels=Object.keys(counts);
+  const data=Object.values(counts);
+  const sorted=[...labels.map((l,i)=>({l,d:data[i]}))].sort((a,b)=>b.d-a.d);
+  new Chart(document.getElementById("chartFlags"),{
+    type:"bar",
+    data:{
+      labels:sorted.map(x=>x.l),
+      datasets:[{
+        data:sorted.map(x=>x.d),
+        backgroundColor:"rgba(232,69,69,0.25)",
+        borderColor:"rgba(232,69,69,0.7)",
+        borderWidth:1,
+        borderRadius:3,
+      }]
+    },
+    options:{...CHART_DEFAULTS,
+      indexAxis:"y",
+      scales:{
+        x:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#555c70",font:{size:10}}},
+        y:{grid:{display:false},ticks:{color:"#8a90a0",font:{size:10,family:"'DM Mono',monospace"}}}
+      }
+    }
+  });
+}
+
+function initChartDeptos(){
+  const top=Object.entries(POR_DEPTO).sort((a,b)=>b[1].n-a[1].n).slice(0,8);
+  new Chart(document.getElementById("chartDeptos"),{
+    type:"bar",
+    data:{
+      labels:top.map(([d])=>d.length>14?d.substring(0,13)+"…":d),
+      datasets:[{
+        data:top.map(([,v])=>v.n),
+        backgroundColor:top.map(([,v])=>v.muy_alto>=3?"rgba(232,69,69,0.3)":v.muy_alto>=1?"rgba(245,166,35,0.3)":"rgba(59,130,246,0.2)"),
+        borderColor:top.map(([,v])=>v.muy_alto>=3?"rgba(232,69,69,0.8)":v.muy_alto>=1?"rgba(245,166,35,0.8)":"rgba(59,130,246,0.5)"),
+        borderWidth:1,borderRadius:3,
+      }]
+    },
+    options:{...CHART_DEFAULTS,
+      scales:{
+        x:{grid:{display:false},ticks:{color:"#555c70",font:{size:9,family:"'DM Mono',monospace"},maxRotation:30}},
+        y:{grid:{color:"rgba(255,255,255,0.04)"},ticks:{color:"#555c70",font:{size:10}}}
+      }
+    }
+  });
+}
+
+function initChartScores(){
+  const niveles=["MUY BAJO","BAJO","MEDIO","ALTO","MUY ALTO"];
+  const counts=niveles.map(n=>CONTRATOS.filter(c=>c.nivel===n).length);
+  const colors=["rgba(85,92,112,0.5)","rgba(59,130,246,0.3)","rgba(245,166,35,0.3)","rgba(232,69,69,0.25)","rgba(232,69,69,0.5)"];
+  const borders=["#555c70","rgba(59,130,246,0.7)","rgba(245,166,35,0.7)","rgba(232,69,69,0.6)","rgba(232,69,69,0.9)"];
+  new Chart(document.getElementById("chartScores"),{
+    type:"doughnut",
+    data:{
+      labels:niveles,
+      datasets:[{data:counts,backgroundColor:colors,borderColor:borders,borderWidth:1}]
+    },
+    options:{
+      ...CHART_DEFAULTS,
+      cutout:"65%",
+      plugins:{
+        legend:{display:true,position:"right",labels:{color:"#8a90a0",font:{size:10,family:"'DM Mono',monospace"},boxWidth:10,padding:8}},
+        tooltip:{...CHART_DEFAULTS.plugins.tooltip}
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// TABLA
+// ═══════════════════════════════════════════════════════
+let sortKey="score", sortDir=-1;
+
+function sortTabla(key){
+  if(sortKey===key) sortDir*=-1; else {sortKey=key;sortDir=-1;}
+  renderTabla();
+}
+
+function renderTabla(){
+  const q=(document.getElementById("search-input").value||"").toLowerCase();
+  let list=ANOMALOS.filter(c=>{
+    if(!q) return true;
+    return c.ref.toLowerCase().includes(q)||c.entidad.toLowerCase().includes(q)||c.depto.toLowerCase().includes(q);
+  });
+  list=[...list].sort((a,b)=>{
+    const av=sortKey==="valor"?a.valor:sortKey==="ref"?a.ref:a.score;
+    const bv=sortKey==="valor"?b.valor:sortKey==="ref"?b.ref:b.score;
+    return av>bv?sortDir:av<bv?-sortDir:0;
+  });
+  document.getElementById("tabla-count").textContent=list.length+" resultados";
+  const nivelColors={
+    "MUY ALTO":"color:var(--red);",
+    "ALTO":"color:var(--amber);",
+    "MEDIO":"color:var(--blue);",
+    "BAJO":"color:var(--text3);",
+    "MUY BAJO":"color:var(--text3);"
+  };
+  document.getElementById("tabla-body").innerHTML=list.slice(0,80).map(c=>`
+    <tr style="border-bottom:1px solid var(--border);cursor:pointer;" onclick="selectCaso(${c.id})">
+      <td style="padding:8px 10px;font-family:'DM Mono',monospace;font-size:11px;">${c.ref}</td>
+      <td style="padding:8px 10px;font-size:11px;color:var(--text2);">${c.depto}</td>
+      <td style="padding:8px 10px;font-size:11px;color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.entidad}</td>
+      <td style="padding:8px 10px;font-size:10px;color:var(--text3);">${c.tipo}</td>
+      <td style="padding:8px 10px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;">${fmtCOP(c.valor)}</td>
+      <td style="padding:8px 10px;text-align:center;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;${nivelColors[c.nivel]}">${c.score}</td>
+      <td style="padding:8px 10px;text-align:center;"><span style="font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid;${
+        c.nivel==="MUY ALTO"?"border-color:rgba(232,69,69,0.4);color:var(--red);background:var(--red-dim);":
+        c.nivel==="ALTO"?"border-color:rgba(245,166,35,0.4);color:var(--amber);background:var(--amber-dim);":
+        c.nivel==="MEDIO"?"border-color:rgba(59,130,246,0.4);color:var(--blue);background:var(--blue-dim);":
+        "border-color:var(--border);color:var(--text3);background:var(--bg3);"
+      }">${c.nivel}</span></td>
+      <td style="padding:8px 10px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);">${c.flags.length}</td>
+    </tr>`).join("");
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+document.getElementById("last-update").textContent=
+  "Actualizado: "+new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"});
+
+initKPIs();
+initDeptoFilter();
+renderCasos();
+renderTabla();
+initChartFlags();
+initChartDeptos();
+initChartScores();
+
+// Mapa después de que D3 cargue
+window.addEventListener("load", ()=>{
+  try{ initMap(); }
+  catch(e){ console.warn("Mapa:",e); }
+});
+</script>
+</body>
+</html>
