@@ -10,6 +10,319 @@
     href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ── NOTIFICATION SYSTEM ── */
+    .notif-btn {
+      position: relative;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background .15s, border-color .15s;
+      flex-shrink: 0;
+    }
+
+    .notif-btn:hover {
+      background: var(--surface3);
+      border-color: var(--accent);
+    }
+
+    .notif-btn.has-unread {
+      animation: bell-shake 0.5s ease;
+    }
+
+    @keyframes bell-shake {
+
+      0%,
+      100% {
+        transform: rotate(0)
+      }
+
+      20% {
+        transform: rotate(-15deg)
+      }
+
+      40% {
+        transform: rotate(12deg)
+      }
+
+      60% {
+        transform: rotate(-10deg)
+      }
+
+      80% {
+        transform: rotate(7deg)
+      }
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--red);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 8px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+      border: 2px solid var(--bg);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Panel desplegable */
+    .notif-panel {
+      position: fixed;
+      top: 52px;
+      right: 16px;
+      width: 340px;
+      max-height: 480px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+      z-index: 9000;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      animation: notif-slide .18s ease;
+    }
+
+    .notif-panel.open {
+      display: flex;
+    }
+
+    @keyframes notif-slide {
+      from {
+        opacity: 0;
+        transform: translateY(-8px) scale(.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .notif-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text1);
+    }
+
+    .notif-panel-head button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text3);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .notif-panel-head button:hover {
+      color: var(--accent2);
+    }
+
+    .notif-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 6px 0;
+    }
+
+    .notif-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+      align-items: flex-start;
+      cursor: default;
+      transition: background .1s;
+    }
+
+    .notif-item:hover {
+      background: var(--surface2);
+    }
+
+    .notif-item.unread {
+      background: rgba(124, 58, 237, .06);
+    }
+
+    .notif-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .notif-body {
+      min-width: 0;
+    }
+
+    .notif-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text1);
+      margin-bottom: 2px;
+    }
+
+    .notif-desc {
+      font-size: 10px;
+      color: var(--text3);
+      line-height: 1.4;
+    }
+
+    .notif-time {
+      font-size: 9px;
+      color: var(--text3);
+      margin-top: 3px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .notif-empty {
+      padding: 32px 16px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    /* Toast */
+    #toast-container {
+      position: fixed;
+      top: 58px;
+      right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      width: 300px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .45);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      pointer-events: all;
+      animation: toast-in .25s cubic-bezier(.34, 1.56, .64, 1);
+      border-left: 3px solid var(--accent);
+    }
+
+    .toast.t-new {
+      border-left-color: var(--green);
+    }
+
+    .toast.t-upd {
+      border-left-color: var(--blue);
+    }
+
+    .toast.t-warn {
+      border-left-color: var(--amber);
+    }
+
+    .toast.t-err {
+      border-left-color: var(--red);
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateX(20px) scale(.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+    }
+
+    .toast-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .toast-body {
+      min-width: 0;
+    }
+
+    .toast-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text1);
+    }
+
+    .toast-desc {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .toast-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text3);
+      cursor: pointer;
+      font-size: 13px;
+      flex-shrink: 0;
+      padding: 0 2px;
+    }
+
+    .toast-close:hover {
+      color: var(--text1);
+    }
+
+    /* Indicador de próximo refresco */
+    .refresh-ring {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--text3);
+    }
+
+    .refresh-ring svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .refresh-ring circle {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 2;
+      stroke-dasharray: 32;
+      stroke-dashoffset: 32;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset linear;
+    }
+  </style>
 </head>
 
 <body>
@@ -31,9 +344,38 @@
       <div class="api-ok" id="api-status">
         <div class="dot-live"></div>Conectando…
       </div>
+      <!-- Indicador de auto-refresco -->
+      <div class="refresh-ring" id="refresh-ring" title="Próximo refresco" style="display:none">
+        <svg viewBox="0 0 12 12">
+          <circle cx="6" cy="6" r="5" id="refresh-circle" />
+        </svg>
+        <span id="refresh-countdown"></span>
+      </div>
+      <!-- Campana de notificaciones -->
+      <button class="notif-btn" id="notif-btn" onclick="toggleNotifPanel()" title="Notificaciones"
+        aria-label="Notificaciones">
+        🔔
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
       <div class="ts" id="ts">—</div>
     </div>
   </header>
+  <!-- Panel de notificaciones -->
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-head">
+      <span>🔔 Notificaciones</span>
+      <div style="display:flex;gap:6px;">
+        <button onclick="markAllRead()">✓ Marcar leídas</button>
+        <button onclick="clearNotifs()">Limpiar</button>
+        <button onclick="toggleNotifPanel()" style="font-size:13px;">✕</button>
+      </div>
+    </div>
+    <div class="notif-list" id="notif-list">
+      <div class="notif-empty">Sin notificaciones aún.</div>
+    </div>
+  </div>
+  <!-- Contenedor de toasts -->
+  <div id="toast-container"></div>
 
   <div class="wrap" id="app">
     <div class="loading">
@@ -920,48 +1262,259 @@
       }).join('');
     }
 
+    // ── NOTIFICATION SYSTEM ────────────────────────────────
+    const REFRESH_MS = 5 * 60 * 1000;  // refresco cada 5 minutos
+    let notifList = [];
+    let notifUnread = 0;
+    let prevContractIds = new Set();
+    let prevCount = 0;
+    let refreshTimer = null;
+    let countdownInterval = null;
+    let refreshAt = null;
+
+    // Solicitar permisos de notificación del navegador al primer interaction
+    function requestNotifPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+
+    // Mostrar toast UI
+    function showToast(title, desc, type = 'info') {
+      const icons = { new: '🟢', upd: '🔄', warn: '⚠️', err: '❌', info: '📊' };
+      const tc = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast t-${type}`;
+      t.innerHTML = `
+        <span class="toast-icon">${icons[type] || '📊'}</span>
+        <div class="toast-body">
+          <div class="toast-title">${title}</div>
+          <div class="toast-desc">${desc}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+      tc.appendChild(t);
+      // Auto-dismiss en 6s
+      setTimeout(() => { t.style.transition = 'opacity .4s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 420); }, 6000);
+    }
+
+    // Añadir notificación al panel y mostrar toast
+    function addNotif(title, desc, type = 'info') {
+      const n = { title, desc, type, time: new Date(), unread: true };
+      notifList.unshift(n);
+      notifUnread++;
+      renderNotifPanel();
+      updateBell();
+      showToast(title, desc, type);
+      // Notificación nativa del navegador
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try { new Notification(title, { body: desc, icon: 'imagenes/marca.png' }); } catch (e) { }
+      }
+    }
+
+    function updateBell() {
+      const badge = document.getElementById('notif-badge');
+      const btn = document.getElementById('notif-btn');
+      if (!badge) return;
+      if (notifUnread > 0) {
+        badge.textContent = notifUnread > 9 ? '9+' : notifUnread;
+        badge.style.display = 'flex';
+        btn.classList.add('has-unread');
+        setTimeout(() => btn.classList.remove('has-unread'), 600);
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    function renderNotifPanel() {
+      const list = document.getElementById('notif-list');
+      if (!list) return;
+      if (notifList.length === 0) {
+        list.innerHTML = '<div class="notif-empty">Sin notificaciones aún.</div>';
+        return;
+      }
+      const typeData = {
+        new: { icon: '🟢', bg: 'var(--green-bg)', col: 'var(--green)' },
+        upd: { icon: '🔄', bg: 'var(--blue-bg)', col: 'var(--blue)' },
+        warn: { icon: '⚠️', bg: 'var(--amber-bg)', col: 'var(--amber)' },
+        err: { icon: '❌', bg: 'var(--red-bg)', col: 'var(--red)' },
+        info: { icon: '📊', bg: 'var(--surface2)', col: 'var(--text2)' },
+      };
+      list.innerHTML = notifList.slice(0, 30).map(n => {
+        const td = typeData[n.type] || typeData.info;
+        const t = n.time;
+        const ts = t.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+        return `<div class="notif-item${n.unread ? ' unread' : ''}">
+          <div class="notif-icon" style="background:${td.bg};color:${td.col}">${td.icon}</div>
+          <div class="notif-body">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-desc">${n.desc}</div>
+            <div class="notif-time">${ts}</div>
+          </div></div>`;
+      }).join('');
+    }
+
+    function toggleNotifPanel() {
+      requestNotifPermission();
+      const p = document.getElementById('notif-panel');
+      if (!p) return;
+      const open = p.classList.toggle('open');
+      if (open) { markAllRead(); }
+    }
+
+    function markAllRead() {
+      notifList.forEach(n => n.unread = false);
+      notifUnread = 0;
+      updateBell();
+      renderNotifPanel();
+    }
+
+    function clearNotifs() {
+      notifList = []; notifUnread = 0;
+      updateBell(); renderNotifPanel();
+    }
+
+    // Cerrar panel al click fuera
+    document.addEventListener('click', e => {
+      const p = document.getElementById('notif-panel');
+      const b = document.getElementById('notif-btn');
+      if (p && p.classList.contains('open') && !p.contains(e.target) && !b.contains(e.target)) {
+        p.classList.remove('open');
+      }
+    });
+
+    // Detectar cambios entre la última carga y la nueva
+    function detectChanges(isFirstLoad) {
+      const newIds = new Set(ALL.map(c => c['ID Contrato']));
+      if (isFirstLoad) {
+        prevContractIds = newIds;
+        prevCount = ALL.length;
+        return;
+      }
+      const nuevos = [...newIds].filter(id => !prevContractIds.has(id));
+      const eliminados = [...prevContractIds].filter(id => !newIds.has(id));
+
+      if (nuevos.length > 0) {
+        addNotif(
+          `🟢 ${nuevos.length} nuevo${nuevos.length > 1 ? 's' : ''} contrato${nuevos.length > 1 ? 's' : ''} detectado${nuevos.length > 1 ? 's' : ''}`,
+          `Total: ${ALL.length} contratos · ${Object.keys(PD).length} departamentos`,
+          'new'
+        );
+      } else if (ALL.length !== prevCount) {
+        addNotif(
+          `🔄 Datos actualizados`,
+          `El leaderboard tiene ${ALL.length} contratos · ${Object.keys(PD).length} departamentos`,
+          'upd'
+        );
+      } else {
+        // Sin cambios: toast silencioso solo en consola
+        console.info('[GobIA] Refresco: sin cambios detectádos (' + new Date().toLocaleTimeString('es-CO') + ')');
+      }
+
+      prevContractIds = newIds;
+      prevCount = ALL.length;
+    }
+
+    // Cuenta regresiva visual en el header
+    function startCountdown() {
+      const ring = document.getElementById('refresh-ring');
+      const cdEl = document.getElementById('refresh-countdown');
+      const circ = document.getElementById('refresh-circle');
+      if (!ring) return;
+      ring.style.display = 'flex';
+      refreshAt = Date.now() + REFRESH_MS;
+      const CIRCUM = 2 * Math.PI * 5; // r=5
+      if (circ) { circ.style.strokeDasharray = CIRCUM; }
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        const rem = Math.max(0, refreshAt - Date.now());
+        const min = Math.floor(rem / 60000);
+        const sec = Math.floor((rem % 60000) / 1000);
+        if (cdEl) cdEl.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+        if (circ) {
+          const progress = 1 - rem / REFRESH_MS;
+          circ.style.strokeDashoffset = CIRCUM * (1 - progress);
+        }
+      }, 1000);
+    }
+
     // ── INIT ───────────────────────────────────────────────
-    async function init() {
+    async function init(isFirstLoad = false) {
       document.getElementById('ts').textContent = new Date().toLocaleTimeString('es-CO');
       try {
         const res = await fetch(API, { method: 'GET', mode: 'cors', headers: { 'Accept': 'application/json' } });
         if (!res.ok) throw new Error('HTTP ' + res.status + ' — ' + res.statusText);
         const data = await res.json();
-        // Acepta: { leaderboard:{...} } o { resultados:[...] } o { mayor_indice_corrupcion:[...] }
         const hasData = data && (data.leaderboard || data.resultados || data.mayor_indice_corrupcion);
-        if (!hasData) {
-          throw new Error('Estructura de datos inesperada en la respuesta');
-        }
+        if (!hasData) throw new Error('Estructura de datos inesperada en la respuesta');
+
         processData(data);
+        detectChanges(isFirstLoad);
+
         document.getElementById('api-status').innerHTML = '<div class="dot-live"></div>API activa';
         document.getElementById('ts').textContent = 'Act. ' + new Date().toLocaleTimeString('es-CO');
-        // Mostrar nombre del agente
         const agEl = document.getElementById('api-agent');
         if (agEl) { agEl.style.display = 'block'; }
-        const resultados = data.resultados || [];
-        document.getElementById('app').innerHTML =
-          buildKPIs() +
-          buildMapSection() +
-          buildDetailSection() +
-          buildCharts() +
-          buildLeaderboard(resultados) +
-          buildTabs() +
-          buildFullTable();
-        renderCases();
-        renderTable();
-        renderTab();
-        initMap();
+
+        if (isFirstLoad) {
+          // Primera carga: construir todo el UI
+          const resultados = data.resultados || [];
+          document.getElementById('app').innerHTML =
+            buildKPIs() +
+            buildMapSection() +
+            buildDetailSection() +
+            buildCharts() +
+            buildLeaderboard(resultados) +
+            buildTabs() +
+            buildFullTable();
+          renderCases();
+          renderTable();
+          renderTab();
+          initMap();
+          // Notificar carga inicial
+          addNotif('📊 Datos cargados', `${ALL.length} contratos · ${Object.keys(PD).length} departamentos · API activa`, 'info');
+        } else {
+          // Refresco: actualizar KPIs y tabla sin redibujar el mapa
+          const kpiEl = document.querySelector('.slabel');
+          if (kpiEl) {
+            const wrap = document.getElementById('app');
+            const resultados = data.resultados || [];
+            wrap.innerHTML =
+              buildKPIs() +
+              buildMapSection() +
+              buildDetailSection() +
+              buildCharts() +
+              buildLeaderboard(resultados) +
+              buildTabs() +
+              buildFullTable();
+            renderCases();
+            renderTable();
+            renderTab();
+            initMap();
+          }
+        }
+
+        // Programar próximo refresco
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => init(false), REFRESH_MS);
+        startCountdown();
+
       } catch (err) {
         document.getElementById('api-status').innerHTML = '<span style="color:var(--red)">⚠ Sin conexión</span>';
-        document.getElementById('app').innerHTML = `<div class="err">
+        addNotif('❌ Error de conexión', err.message, 'err');
+        if (isFirstLoad) {
+          document.getElementById('app').innerHTML = `<div class="err">
       <div style="font-size:22px;margin-bottom:7px;">⚠️</div>
       <div style="font-weight:600;margin-bottom:5px;">Error al conectar con la API</div>
       <div style="font-size:11px;opacity:.8;">${err.message}</div>
-      <button onclick="init()" style="margin-top:12px;background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;">Reintentar</button>
+      <button onclick="init(true)" style="margin-top:12px;background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;">Reintentar</button>
     </div>`;
+        }
+        // Reintentar en 2 min si falla
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => init(false), 2 * 60 * 1000);
       }
     }
-    init();
+    init(true);
   </script>
 
   <!-- ── CHATBOT WIDGET ─────────────────────────────────── -->
