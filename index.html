@@ -1,876 +1,600 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GobIA — Monitor de Contratación Pública</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #f0f2f5;
-  --surface: #ffffff;
-  --surface2: #f7f8fa;
-  --border: #e2e5ea;
-  --border2: #c8cdd6;
-  --text: #1a1f2e;
-  --text2: #4a5568;
-  --text3: #8a95a3;
-  --red: #dc2626;
-  --red-bg: #fef2f2;
-  --red-border: #fecaca;
-  --amber: #d97706;
-  --amber-bg: #fffbeb;
-  --amber-border: #fde68a;
-  --green: #16a34a;
-  --green-bg: #f0fdf4;
-  --green-border: #bbf7d0;
-  --blue: #2563eb;
-  --blue-bg: #eff6ff;
-  --blue-border: #bfdbfe;
-  --teal: #0d9488;
-  --teal-bg: #f0fdfa;
-  --teal-border: #99f6e4;
-  --purple: #7c3aed;
-  --purple-bg: #f5f3ff;
-  --purple-border: #ddd6fe;
-  --radius: 8px;
-  --radius-lg: 12px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-
-body {
-  font-family: 'DM Sans', 'Segoe UI', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  font-size: 13px;
-}
-
-/* ── SCROLLBAR */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-
-/* ── HEADER */
-.header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: var(--shadow);
-}
-.header-left { display: flex; align-items: center; gap: 12px; }
-.logo-mark {
-  width: 30px; height: 30px;
-  background: linear-gradient(135deg, #1e40af, #2563eb);
-  border-radius: 7px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 700; color: white;
-  letter-spacing: -0.5px;
-}
-.logo-text { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
-.logo-text span { color: var(--blue); }
-.header-divider { width: 1px; height: 20px; background: var(--border2); }
-.header-subtitle { font-size: 12px; color: var(--text3); font-weight: 400; }
-.header-right { display: flex; align-items: center; gap: 10px; }
-.api-badge {
-  display: flex; align-items: center; gap: 5px;
-  background: var(--green-bg);
-  border: 1px solid var(--green-border);
-  border-radius: 20px;
-  padding: 3px 10px;
-  font-size: 11px;
-  color: var(--green);
-  font-weight: 500;
-}
-.api-dot {
-  width: 5px; height: 5px;
-  background: var(--green);
-  border-radius: 50%;
-  animation: blink 2s infinite;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.timestamp {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--text3);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 3px 8px;
-}
-
-/* ── MAIN */
-.main { padding: 20px 24px; max-width: 1440px; margin: 0 auto; }
-
-/* ── SECTION HEADER */
-.section-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  margin-top: 20px;
-}
-.section-head:first-child { margin-top: 0; }
-.section-icon {
-  width: 20px; height: 20px;
-  border-radius: 5px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px;
-}
-.section-title { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
-
-/* ── KPI ROW */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  margin-bottom: 4px;
-}
-@media(max-width:1200px){ .kpi-grid{ grid-template-columns: repeat(3,1fr); } }
-@media(max-width:768px){ .kpi-grid{ grid-template-columns: repeat(2,1fr); } }
-
-.kpi-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  box-shadow: var(--shadow);
-  transition: box-shadow 0.15s, transform 0.15s;
-}
-.kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.kpi-icon-wrap {
-  width: 38px; height: 38px;
-  border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px;
-  flex-shrink: 0;
-}
-.kpi-content { min-width: 0; flex: 1; }
-.kpi-label { font-size: 10px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
-.kpi-value { font-size: 20px; font-weight: 700; line-height: 1.1; margin-bottom: 2px; }
-.kpi-sub { font-size: 10px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* ── CONTENT GRID */
-.content-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.content-row.three { grid-template-columns: 1fr 1fr 1fr; }
-@media(max-width:960px) { .content-row, .content-row.three { grid-template-columns: 1fr; } }
-
-/* ── PANEL */
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-.panel-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--border);
-}
-.panel-title {
-  font-size: 13px; font-weight: 600; color: var(--text);
-  display: flex; align-items: center; gap: 7px;
-}
-.panel-icon { font-size: 14px; }
-.panel-badge {
-  font-size: 10px;
-  font-family: 'DM Mono', monospace;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text3);
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-.panel-body { padding: 14px 16px; }
-.panel-body.no-pad { padding: 0; }
-
-/* ── CONTRACT CARDS */
-.contract-list { display: flex; flex-direction: column; }
-.contract-item {
-  display: grid;
-  grid-template-columns: 36px 1fr auto;
-  align-items: start;
-  gap: 10px;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.1s;
-  text-decoration: none;
-  color: inherit;
-}
-.contract-item:last-child { border-bottom: none; }
-.contract-item:hover { background: var(--surface2); }
-
-.rank-num {
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  font-weight: 500;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-.rank-red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
-.rank-green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-.rank-blue { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
-.rank-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
-.rank-teal { background: var(--teal-bg); color: var(--teal); border: 1px solid var(--teal-border); }
-
-.ci-title {
-  font-size: 12px; font-weight: 600; color: var(--text);
-  margin-bottom: 2px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.ci-entity { font-size: 11px; color: var(--text2); margin-bottom: 3px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ci-tags { display: flex; flex-wrap: wrap; gap: 3px; }
-.tag {
-  font-size: 9px;
-  padding: 1px 6px;
-  border-radius: 10px;
-  font-weight: 500;
-  border: 1px solid;
-  white-space: nowrap;
-}
-.tag-red { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
-.tag-green { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
-.tag-blue { background: var(--blue-bg); color: var(--blue); border-color: var(--blue-border); }
-.tag-amber { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-border); }
-.tag-gray { background: var(--surface2); color: var(--text3); border-color: var(--border); }
-.tag-teal { background: var(--teal-bg); color: var(--teal); border-color: var(--teal-border); }
-
-.ci-score {
-  display: flex; flex-direction: column; align-items: flex-end;
-  flex-shrink: 0;
-}
-.score-big {
-  font-family: 'DM Mono', monospace;
-  font-size: 16px; font-weight: 500;
-  line-height: 1;
-  margin-bottom: 2px;
-}
-.score-label { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; }
-
-/* ── CONTRACTOR CARDS */
-.contractor-list { display: flex; flex-direction: column; }
-.contractor-item {
-  display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 10px;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--border);
-  align-items: start;
-}
-.contractor-item:last-child { border-bottom: none; }
-
-.co-name { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.co-stats { display: flex; gap: 10px; margin-bottom: 4px; }
-.co-stat { display: flex; flex-direction: column; align-items: flex-start; }
-.co-stat-val { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text); }
-.co-stat-label { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; }
-
-/* ── SCORE BAR */
-.score-bar-row { display: flex; align-items: center; gap: 7px; margin-top: 4px; }
-.score-bar-track { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
-.score-bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-.score-bar-val { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text2); flex-shrink: 0; width: 28px; text-align: right; }
-
-/* ── TABS */
-.tabs {
-  display: flex;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 4px;
-  gap: 2px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow);
-  overflow-x: auto;
-}
-.tab-btn {
-  flex: 1;
-  min-width: 0;
-  padding: 7px 12px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text3);
-  white-space: nowrap;
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  transition: all 0.15s;
-}
-.tab-btn:hover { background: var(--bg); color: var(--text2); }
-.tab-btn.active { background: var(--blue); color: white; box-shadow: 0 1px 3px rgba(37,99,235,0.3); }
-.tab-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-
-/* ── LOADING */
-.loading {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  height: 300px; gap: 14px;
-}
-.spinner {
-  width: 32px; height: 32px;
-  border: 3px solid var(--border);
-  border-top-color: var(--blue);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 13px; color: var(--text3); }
-
-/* ── ERROR */
-.error-box {
-  background: var(--red-bg);
-  border: 1px solid var(--red-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  text-align: center;
-  color: var(--red);
-}
-
-/* ── FOOTER */
-.footer {
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  padding: 14px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--text3);
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.footer a { color: var(--blue); text-decoration: none; }
-.footer a:hover { text-decoration: underline; }
-
-/* ── ALERT PILLS */
-.alert-pill {
-  display: inline-flex; align-items: center; gap: 3px;
-  font-size: 9px; padding: 1px 6px; border-radius: 10px;
-  background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border);
-  max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
-/* ── URL LINK */
-.secop-link {
-  font-size: 10px;
-  color: var(--blue);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-top: 3px;
-}
-.secop-link:hover { text-decoration: underline; }
-
-/* ── FULL TABLE */
-.full-panel { margin-bottom: 12px; }
-.data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-.data-table th {
-  text-align: left;
-  padding: 9px 12px;
-  background: var(--surface2);
-  border-bottom: 1px solid var(--border);
-  color: var(--text3);
-  font-weight: 600;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  position: sticky; top: 0;
-  white-space: nowrap;
-}
-.data-table td {
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text2);
-  vertical-align: top;
-}
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: var(--surface2); }
-.data-table td.mono { font-family: 'DM Mono', monospace; color: var(--text); }
-.data-table td.id { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--blue); }
-.table-wrap { overflow-x: auto; max-height: 320px; overflow-y: auto; }
-
-/* ── SCORE BADGE TABLE */
-.score-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 6px;
-  min-width: 36px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoreo Tobaru s.a.s</title>
+  <link rel="icon" type="image/png" href="imagenes/marca.png">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
-<!-- HEADER -->
-<header class="header">
-  <div class="header-left">
-    <div class="logo-mark">G</div>
-    <span class="logo-text">Gob<span>IA</span></span>
-    <div class="header-divider"></div>
-    <span class="header-subtitle">Monitor de Contratación Pública · Colombia</span>
-  </div>
-  <div class="header-right">
-    <div class="api-badge">
-      <div class="api-dot"></div>
-      API activa
+  <header class="hdr">
+    <div class="hdr-l">
+      <!-- Logo desde carpeta imagenes/ en el mismo repositorio -->
+      <img src="imagenes/marca.png" alt="GobIA" class="logo-img"
+        onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex';">
+      <div id="logo-fallback"
+        style="display:none;width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">
+        G</div>
+      <div class="sep"></div>
+      <span class="subtitle">Monitor de Contratación Pública · Colombia</span>
     </div>
-    <div class="timestamp" id="ts">Cargando...</div>
+    <div class="hdr-r">
+      <span id="api-agent"
+        style="font-size:10px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 9px;display:none;"></span>
+      <div class="api-ok" id="api-status">
+        <div class="dot-live"></div>Conectando…
+      </div>
+      <div class="ts" id="ts">—</div>
+    </div>
+  </header>
+
+  <div class="wrap" id="app">
+    <div class="loading">
+      <div class="spinner"></div>Cargando datos de la API GobIA…
+    </div>
   </div>
-</header>
 
-<!-- MAIN -->
-<main class="main" id="app">
-  <div class="loading">
-    <div class="spinner"></div>
-    <div class="loading-text">Conectando con API GobIA...</div>
-  </div>
-</main>
+  <footer class="ftr">
+    <span>GobIA · Análisis de contratación pública Colombia · Datos reales de <a href="https://www.datos.gov.co"
+        target="_blank">datos.gov.co</a></span>
+    <span>API: <a href="https://gobiapi.tobaru.xyz/api/leaderboard/gobia" target="_blank">gobiapi.tobaru.xyz</a></span>
+  </footer>
 
-<footer class="footer">
-  <span>GobIA · Análisis de contratación pública Colombia · Datos reales de <a href="https://www.datos.gov.co" target="_blank">datos.gov.co</a></span>
-  <span>API: <a href="https://gobiapi.tobaru.xyz/api/leaderboard/gobia" target="_blank">gobiapi.tobaru.xyz</a></span>
-</footer>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script>
+    const API = 'https://gobiapi.tobaru.xyz/api/leaderboard/gobia';
+    const GEO_URLS = [
+      'https://gist.githubusercontent.com/john-guerra/43c7656821069d00dcbc/raw/be6a6e239cd5b5b803c6e7c2ec405b793a9064dd/Colombia.geo.json',
+      'https://raw.githubusercontent.com/marcovega/colombia-json/master/colombia.min.json'
+    ];
 
-<script>
-const API = 'https://gobiapi.tobaru.xyz/api/leaderboard/gobia';
+    // ── UTILS ─────────────────────────────────────────────
+    function fmtBig(s) {
+      const n = parseFloat((s || '0').toString().replace(/[$,]/g, ''));
+      if (isNaN(n) || n === 0) return s || '—';
+      if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'B';
+      if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'MM';
+      if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return '$' + (n / 1e3).toFixed(0) + 'K';
+      return s || '—';
+    }
+    function tc(s, n) { if (!s) return '—'; return s.length > n ? s.slice(0, n) + '…' : s; }
+    function sc(v, m = 't') {
+      const n = parseFloat(v);
+      if (m === 't') return n >= 65 ? 'var(--green)' : n >= 45 ? 'var(--blue)' : n >= 25 ? 'var(--amber)' : 'var(--red)';
+      if (m === 'bg') return n >= 65 ? 'var(--green-bg)' : n >= 45 ? 'var(--blue-bg)' : n >= 25 ? 'var(--amber-bg)' : 'var(--red-bg)';
+      return n >= 65 ? 'var(--green-b)' : n >= 45 ? 'var(--blue-b)' : n >= 25 ? 'var(--amber-b)' : 'var(--red-b)';
+    }
+    function oc(p, m = 't') {
+      const n = parseFloat(p);
+      if (m === 't') return n >= 80 ? 'var(--red)' : n >= 50 ? 'var(--amber)' : n >= 25 ? 'var(--blue)' : 'var(--green)';
+      if (m === 'bg') return n >= 80 ? 'var(--red-bg)' : n >= 50 ? 'var(--amber-bg)' : n >= 25 ? 'var(--blue-bg)' : 'var(--green-bg)';
+      return n >= 80 ? 'var(--red-b)' : n >= 50 ? 'var(--amber-b)' : n >= 25 ? 'var(--blue-b)' : 'var(--green-b)';
+    }
+    const PALETTES = [
+      { bg: 'var(--red-bg)', tc: 'var(--red)', b: 'var(--red-b)' },
+      { bg: 'var(--amber-bg)', tc: 'var(--amber)', b: 'var(--amber-b)' },
+      { bg: 'var(--blue-bg)', tc: 'var(--blue)', b: 'var(--blue-b)' },
+      { bg: 'var(--green-bg)', tc: 'var(--green)', b: 'var(--green-b)' },
+      { bg: 'var(--teal-bg)', tc: 'var(--teal)', b: 'var(--teal-b)' },
+    ];
+    function pal(i) { return PALETTES[i % PALETTES.length]; }
+    function rnum(i) {
+      const p = pal(i);
+      return `<div class="rnum" style="background:${p.bg};color:${p.tc};border:1px solid ${p.b};">${i + 1}</div>`;
+    }
 
-// ── UTILS ──────────────────────────────────────────────
-function fmtCOP(s) {
-  if (!s) return '—';
-  // Already formatted like "$2,396,492"
-  if (typeof s === 'string') return s;
-  return '$' + new Intl.NumberFormat('es-CO').format(s);
-}
-function fmtBillions(s) {
-  const n = parseFloat((s || '0').toString().replace(/[$,]/g, ''));
-  if (n >= 1e12) return '$' + (n/1e12).toFixed(1) + 'B';
-  if (n >= 1e9) return '$' + (n/1e9).toFixed(1) + 'MM';
-  if (n >= 1e6) return '$' + (n/1e6).toFixed(0) + 'M';
-  return fmtCOP(s);
-}
-function scoreColor(score, mode='text') {
-  const n = parseFloat(score);
-  let color;
-  if (n >= 70) color = mode==='text'?'var(--green)':mode==='bg'?'var(--green-bg)':'var(--green-border)';
-  else if (n >= 50) color = mode==='text'?'var(--blue)':mode==='bg'?'var(--blue-bg)':'var(--blue-border)';
-  else if (n >= 30) color = mode==='text'?'var(--amber)':mode==='bg'?'var(--amber-bg)':'var(--amber-border)';
-  else color = mode==='text'?'var(--red)':mode==='bg'?'var(--red-bg)':'var(--red-border)';
-  return color;
-}
-function corruptionColor(pct, mode='text') {
-  const n = parseFloat(pct);
-  let color;
-  if (n >= 80) color = mode==='text'?'var(--red)':mode==='bg'?'var(--red-bg)':'var(--red-border)';
-  else if (n >= 50) color = mode==='text'?'var(--amber)':mode==='bg'?'var(--amber-bg)':'var(--amber-border)';
-  else if (n >= 25) color = mode==='text'?'var(--blue)':mode==='bg'?'var(--blue-bg)':'var(--blue-border)';
-  else color = mode==='text'?'var(--green)':mode==='bg'?'var(--green-bg)':'var(--green-border)';
-  return color;
-}
-function truncate(str, n) {
-  if (!str) return '—';
-  return str.length > n ? str.substring(0, n) + '…' : str;
-}
-function rankClass(i, mode) {
-  const classes = ['rank-red','rank-amber','rank-blue','rank-green','rank-teal'];
-  return classes[i % classes.length];
-}
+    // ── STATE ──────────────────────────────────────────────
+    let LB = {}, ALL = [], PD = {};
+    let fNivel = '', fDepto = '', selCase = null, activeTab = 0, sortK = 'corruption', sortD = -1, srchQ = '';
 
-// ── RENDER KPIs ────────────────────────────────────────
-function renderKPIs(data) {
-  const lb = data.leaderboard;
-  const topCorrupt = lb.mayor_indice_corrupcion[0];
-  const topRec = lb.contratos_recomendados[0];
-  const topContractor = lb.contratistas_mejor_historial[0];
-  const topCP = lb.mejor_confiabilidad_precio[0];
-  const topGeneral = lb.mejores_contratos_generales[0];
+    function processData(data) {
+      // La API retorna { agente, descripcion, leaderboard: { ... } }
+      LB = data.leaderboard || data;
+      ALL = []; PD = {};
+      const seen = new Set();
+      const lists = [
+        ...(LB.mayor_indice_corrupcion || []),
+        ...(LB.contratos_recomendados || []),
+        ...(LB.mejor_confiabilidad_precio || []),
+        ...(LB.mejores_contratos_generales || []),
+      ];
+      lists.forEach(c => {
+        const id = c['ID Contrato'];
+        if (!seen.has(id)) { seen.add(id); ALL.push(c); }
+      });
+      ALL.forEach(c => {
+        const d = c.Departamento;
+        if (!PD[d]) PD[d] = { n: 0, opacSum: 0, maxOpac: 0, valor: 0 };
+        PD[d].n++; PD[d].opacSum += c.porcentaje_corrupcion_estimado;
+        PD[d].valor += parseFloat((c['Valor del Contrato'] || '0').replace(/[$,]/g, ''));
+        if (c.porcentaje_corrupcion_estimado > PD[d].maxOpac) PD[d].maxOpac = c.porcentaje_corrupcion_estimado;
+      });
+      // Mostrar descripción del agente en el header si está disponible
+      if (data.agente) {
+        const el = document.getElementById('api-agent');
+        if (el) el.textContent = data.agente;
+      }
+    }
 
-  const kpis = [
-    {
-      icon: '⚠️', iconBg: 'var(--red-bg)',
-      label: 'Mayor Riesgo',
-      value: topCorrupt['porcentaje_corrupcion_estimado'] + '%',
-      valueColor: 'var(--red)',
-      sub: truncate(topCorrupt['ID Contrato'], 22),
-    },
-    {
-      icon: '✅', iconBg: 'var(--green-bg)',
-      label: 'Score Recomendación',
-      value: topRec['score_recomendacion'].toFixed(1),
-      valueColor: 'var(--green)',
-      sub: truncate(topRec['ID Contrato'], 22),
-    },
-    {
-      icon: '🏆', iconBg: 'var(--blue-bg)',
-      label: 'Mejor Contratista',
-      value: topContractor['score_historial'].toFixed(1),
-      valueColor: 'var(--blue)',
-      sub: truncate(topContractor['Proveedor Adjudicado'], 22),
-    },
-    {
-      icon: '💰', iconBg: 'var(--teal-bg)',
-      label: 'Mejor Conf./Precio',
-      value: topCP['score_confiabilidad_precio'].toFixed(1),
-      valueColor: 'var(--teal)',
-      sub: truncate(topCP['ID Contrato'], 22),
-    },
-    {
-      icon: '⭐', iconBg: 'var(--purple-bg)',
-      label: 'Mejor Score General',
-      value: topGeneral['score_general'].toFixed(1),
-      valueColor: 'var(--purple)',
-      sub: truncate(topGeneral['ID Contrato'], 22),
-    },
-  ];
+    // ── KPIs ──────────────────────────────────────────────
+    function buildKPIs() {
+      const kpis = [
+        { icon: '⚠️', bg: 'var(--red-bg)', label: 'Mayor opacidad', val: LB.mayor_indice_corrupcion[0].porcentaje_corrupcion_estimado + '%', col: 'var(--red)', sub: tc(LB.mayor_indice_corrupcion[0]['ID Contrato'], 24) },
+        { icon: '✅', bg: 'var(--green-bg)', label: 'Top recomendado', val: LB.contratos_recomendados[0].score_recomendacion.toFixed(1), col: 'var(--green)', sub: tc(LB.contratos_recomendados[0]['ID Contrato'], 24) },
+        { icon: '🏆', bg: 'var(--blue-bg)', label: 'Mejor contratista', val: LB.contratistas_mejor_historial[0].score_historial.toFixed(1), col: 'var(--blue)', sub: tc(LB.contratistas_mejor_historial[0]['Proveedor Adjudicado'], 24) },
+        { icon: '💰', bg: 'var(--teal-bg)', label: 'Mejor conf./precio', val: LB.mejor_confiabilidad_precio[0].score_confiabilidad_precio.toFixed(1), col: 'var(--teal)', sub: tc(LB.mejor_confiabilidad_precio[0]['ID Contrato'], 24) },
+        { icon: '⭐', bg: 'var(--purple-bg)', label: 'Mejor score general', val: LB.mejores_contratos_generales[0].score_general.toFixed(1), col: 'var(--purple)', sub: tc(LB.mejores_contratos_generales[0]['ID Contrato'], 24) },
+      ];
+      return `
+  <div class="slabel"><div class="si" style="background:var(--accent-bg)">📊</div><span class="st">Resumen ejecutivo</span><span class="pbadge" style="margin-left:4px;">${ALL.length} contratos · ${Object.keys(PD).length} departamentos</span></div>
+  <div class="row row-5" style="margin-bottom:16px;">
+    ${kpis.map(k => `<div class="panel kpi-card"><div class="kpi"><div class="kpi-icon" style="background:${k.bg}">${k.icon}</div><div style="min-width:0;"><div class="kpi-label">${k.label}</div><div class="kpi-val" style="color:${k.col}">${k.val}</div><div class="kpi-sub">${k.sub}</div></div></div></div>`).join('')}
+  </div>`;
+    }
 
-  return `
-  <div class="section-head">
-    <div class="section-icon" style="background:var(--blue-bg);">📊</div>
-    <span class="section-title">Resumen ejecutivo · ${new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'})}</span>
-  </div>
-  <div class="kpi-grid">
-    ${kpis.map(k => `
-      <div class="kpi-card">
-        <div class="kpi-icon-wrap" style="background:${k.iconBg};">${k.icon}</div>
-        <div class="kpi-content">
-          <div class="kpi-label">${k.label}</div>
-          <div class="kpi-value" style="color:${k.valueColor};">${k.value}</div>
-          <div class="kpi-sub">${k.sub}</div>
+    // ── MAP ────────────────────────────────────────────────
+    function normD(s) {
+      if (!s) return '';
+      const c = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+      const al = { 'ARCHIPIELAGO DE SAN ANDRES PROVIDENCIA Y SANTA CATALINA': 'SAN ANDRES', 'NORTE SANTANDER': 'NORTE DE SANTANDER', 'VALLE': 'VALLE DEL CAUCA', 'BOGOTA D C': 'CUNDINAMARCA', 'BOGOTA, D.C.': 'CUNDINAMARCA', 'DISTRITO CAPITAL DE BOGOTA': 'CUNDINAMARCA', 'GUAJIRA': 'LA GUAJIRA' };
+      return al[c] || c;
+    }
+    function featN(f) { const p = f.properties || {}; return p.NOMBRE_DPT || p.NOMBRE || p.DPTO_CNMBR || p.NAME_1 || p.departamento || p.Departamento || p.NAME || ''; }
+
+    async function initMap() {
+      const svg = d3.select('#col-map');
+      const cont = document.getElementById('map-container');
+      const W = cont.clientWidth || 560, H = 400;
+      svg.selectAll('*').remove();
+      svg.attr('viewBox', `0 0 ${W} ${H}`);
+      const tt = document.getElementById('mtt');
+      const risk = {};
+      Object.entries(PD).forEach(([d, s]) => { risk[normD(d)] = s; });
+      const maxO = Math.max(...Object.values(risk).map(d => d.maxOpac), 1);
+      // Paleta oscura morada→roja
+      const col = d3.scaleSequential([0, maxO], d3.interpolateRgb('#3b1f6e', '#f87171'));
+      let geo = null;
+      for (const url of GEO_URLS) {
+        try {
+          const raw = await d3.json(url);
+          if (raw && Array.isArray(raw.features) && raw.features.length) { geo = raw; break; }
+          if (raw && raw.type === 'Topology') { const k = Object.keys(raw.objects)[0]; const g = topojson.feature(raw, raw.objects[k]); if (g && g.features && g.features.length) { geo = g; break; } }
+        } catch (e) { console.warn('GeoJSON:', url, e); }
+      }
+      if (!geo) { document.getElementById('map-badge').textContent = 'Sin geometría'; return; }
+      document.getElementById('map-badge').textContent = 'Colombia · geometría real';
+      const proj = d3.geoMercator().fitSize([W, H], geo);
+      const path = d3.geoPath(proj);
+      svg.selectAll('path').data(geo.features).enter().append('path')
+        .attr('d', path)
+        .attr('fill', f => { const d = normD(featN(f)); const s = risk[d]; return (!s || s.n === 0) ? '#1f2333' : col(s.maxOpac); })
+        .attr('stroke', '#0d0f14').attr('stroke-width', 0.7).attr('cursor', 'pointer').style('transition', 'opacity .15s')
+        .on('mouseover', function (e, f) {
+          d3.select(this).attr('opacity', 0.75);
+          const raw = featN(f), d = normD(raw), s = risk[d] || { n: 0, opacSum: 0, maxOpac: 0, valor: 0 };
+          const avg = s.n > 0 ? (s.opacSum / s.n).toFixed(0) : 0;
+          tt.style.display = 'block';
+          document.getElementById('tt-name').textContent = raw || d;
+          document.getElementById('tt-n').textContent = s.n;
+          document.getElementById('tt-avg').textContent = avg + '%';
+          document.getElementById('tt-max').textContent = s.maxOpac + '%';
+          document.getElementById('tt-val').textContent = fmtBig(s.valor + '');
+        })
+        .on('mousemove', function (e) { const r = cont.getBoundingClientRect(); tt.style.left = (e.clientX - r.left + 12) + 'px'; tt.style.top = (e.clientY - r.top - 10) + 'px'; })
+        .on('mouseout', function () { d3.select(this).attr('opacity', 1); tt.style.display = 'none'; })
+        .on('click', function (e, f) {
+          const d = normD(featN(f));
+          const match = Object.keys(PD).find(k => normD(k) === d);
+          if (match) { fDepto = match; const sel = document.getElementById('fd'); if (sel) { sel.value = match; } renderCases(); }
+        });
+    }
+
+    // ── MAP + CASES SECTION ────────────────────────────────
+    function buildMapSection() {
+      const deptos = [...new Set(ALL.map(c => c.Departamento))].sort();
+      return `
+  <div class="slabel" style="margin-top:16px;"><div class="si" style="background:var(--blue-bg)">🗺️</div><span class="st">Mapa de riesgo · Casos detectados</span></div>
+  <div class="row row-map">
+    <div class="panel">
+      <div class="ph"><div class="pt">🗺️ Mapa de riesgo por departamento</div><span class="pbadge" id="map-badge">Cargando…</span></div>
+      <div id="map-container"><svg id="col-map"></svg>
+        <div class="mtt" id="mtt">
+          <div class="mtt-name" id="tt-name"></div>
+          <div class="mtt-row"><span>Contratos</span><span class="mtt-val" id="tt-n"></span></div>
+          <div class="mtt-row"><span>Opacidad prom.</span><span class="mtt-val" id="tt-avg"></span></div>
+          <div class="mtt-row"><span>Opacidad máx.</span><span class="mtt-val" id="tt-max"></span></div>
+          <div class="mtt-row"><span>Valor total</span><span class="mtt-val" id="tt-val"></span></div>
         </div>
-      </div>`).join('')}
-  </div>`;
-}
-
-// ── RENDER CORRUPTION ──────────────────────────────────
-function renderCorruption(items) {
-  return `
-  <div class="panel full-panel">
-    <div class="panel-header">
-      <div class="panel-title"><span class="panel-icon">⚠️</span> Mayor índice de corrupción / opacidad</div>
-      <span class="panel-badge">Top ${items.length}</span>
-    </div>
-    <div class="panel-body no-pad">
-      <div class="contract-list">
-        ${items.slice(0,8).map((c,i) => `
-          <a class="contract-item" href="${c.URLProceso}" target="_blank">
-            <div class="rank-num rank-red">${i+1}</div>
-            <div style="min-width:0;">
-              <div class="ci-title">${c['ID Contrato']} — ${c.Departamento}</div>
-              <div class="ci-entity">${c['Nombre Entidad']} · ${c['Proveedor Adjudicado']}</div>
-              <div class="ci-tags">
-                <span class="tag tag-red">Opacidad ${c.porcentaje_corrupcion_estimado}%</span>
-                <span class="tag tag-gray">${c['Tipo de Contrato']}</span>
-                <span class="tag tag-amber">${c['Modalidad de Contratacion']}</span>
-              </div>
-              <div style="font-size:10px;color:var(--text3);margin-top:3px;">${truncate(c['Objeto del Contrato'],90)}</div>
-            </div>
-            <div class="ci-score">
-              <div class="score-big" style="color:${corruptionColor(c.porcentaje_corrupcion_estimado)}">${c.porcentaje_corrupcion_estimado}%</div>
-              <div class="score-label">Opacidad</div>
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px;">${fmtBillions(c['Valor del Contrato'])}</div>
-            </div>
-          </a>`).join('')}
+      </div>
+      <div class="map-leg">
+        <span class="leg-t">Bajo</span><div class="leg-g"></div><span class="leg-t">Alto</span>
+        <span class="leg-t" style="margin-left:10px;">Índice de opacidad — clic en un dpto. para filtrar</span>
       </div>
     </div>
-  </div>`;
-}
-
-// ── RENDER RECOMMENDED ─────────────────────────────────
-function renderRecommended(items) {
-  return `
-  <div class="panel full-panel">
-    <div class="panel-header">
-      <div class="panel-title"><span class="panel-icon">✅</span> Contratos recomendados</div>
-      <span class="panel-badge">Top ${items.length}</span>
-    </div>
-    <div class="panel-body no-pad">
-      <div class="contract-list">
-        ${items.slice(0,8).map((c,i) => `
-          <a class="contract-item" href="${c.URLProceso}" target="_blank">
-            <div class="rank-num rank-green">${i+1}</div>
-            <div style="min-width:0;">
-              <div class="ci-title">${c['ID Contrato']} — ${c.Departamento}</div>
-              <div class="ci-entity">${c['Nombre Entidad']} · ${c['Proveedor Adjudicado']}</div>
-              <div class="ci-tags">
-                <span class="tag tag-green">Rec. ${c.score_recomendacion.toFixed(1)}</span>
-                <span class="tag tag-blue">Historial ${c.score_historial.toFixed(1)}</span>
-                <span class="tag tag-gray">${c['Tipo de Contrato']}</span>
-              </div>
-              <div style="font-size:10px;color:var(--text3);margin-top:3px;">${truncate(c['Objeto del Contrato'],90)}</div>
-            </div>
-            <div class="ci-score">
-              <div class="score-big" style="color:var(--green)">${c.score_recomendacion.toFixed(1)}</div>
-              <div class="score-label">Score</div>
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px;">${fmtBillions(c['Valor del Contrato'])}</div>
-            </div>
-          </a>`).join('')}
+    <div class="panel" style="display:flex;flex-direction:column;max-height:470px;">
+      <div class="ph"><div class="pt">⚠️ Casos detectados</div><span class="pbadge" id="cases-badge">—</span></div>
+      <div class="filter-bar">
+        <select id="fn" onchange="fNivel=this.value;renderCases()">
+          <option value="">Todos los niveles</option>
+          <option value="alta">Alta (≥80%)</option>
+          <option value="media">Media (50-79%)</option>
+          <option value="baja">Baja (&lt;50%)</option>
+        </select>
+        <select id="fd" onchange="fDepto=this.value;renderCases()">
+          <option value="">Todos los dptos.</option>
+          ${deptos.map(d => `<option value="${d}">${d}</option>`).join('')}
+        </select>
       </div>
+      <div class="cases-list" id="cases-list" style="flex:1;overflow-y:auto;"></div>
     </div>
   </div>`;
-}
+    }
 
-// ── RENDER CONTRACTORS ─────────────────────────────────
-function renderContractors(items) {
-  return `
-  <div class="panel full-panel">
-    <div class="panel-header">
-      <div class="panel-title"><span class="panel-icon">🏆</span> Contratistas con mejor historial</div>
-      <span class="panel-badge">${items.length} contratistas</span>
+    // ── DETAIL ─────────────────────────────────────────────
+    function buildDetailSection() {
+      return `<div class="detail" id="detail-panel">
+    <div class="d-head">
+      <div><div class="d-id" id="d-id"></div><div class="d-sub" id="d-sub"></div></div>
+      <button class="d-close" onclick="closeDetail()">✕</button>
     </div>
-    <div class="panel-body no-pad">
-      <div class="contractor-list">
-        ${items.slice(0,10).map((c,i) => {
-          const score = c.score_historial;
-          const barColor = scoreColor(score);
-          const opacColor = c.opacidad_promedio < 30 ? 'var(--green)' : c.opacidad_promedio < 50 ? 'var(--amber)' : 'var(--red)';
-          return `
-          <div class="contractor-item">
-            <div class="rank-num ${rankClass(i)}">${i+1}</div>
-            <div style="min-width:0;">
-              <div class="co-name">${c['Proveedor Adjudicado']}</div>
-              <div class="co-stats">
-                <div class="co-stat">
-                  <span class="co-stat-val">${c.contratos.toLocaleString('es-CO')}</span>
-                  <span class="co-stat-label">Contratos</span>
-                </div>
-                <div class="co-stat">
-                  <span class="co-stat-val">${c.departamentos}</span>
-                  <span class="co-stat-label">Dptos.</span>
-                </div>
-                <div class="co-stat">
-                  <span class="co-stat-val">${c.entidades}</span>
-                  <span class="co-stat-label">Entidades</span>
-                </div>
-                <div class="co-stat">
-                  <span class="co-stat-val" style="color:${opacColor}">${c.opacidad_promedio.toFixed(1)}%</span>
-                  <span class="co-stat-label">Opacidad prom.</span>
-                </div>
-              </div>
-              <div class="score-bar-row">
-                <div class="score-bar-track">
-                  <div class="score-bar-fill" style="width:${score}%;background:${barColor};"></div>
-                </div>
-                <span class="score-bar-val" style="color:${barColor};">${score}</span>
-              </div>
-            </div>
-          </div>`;
-        }).join('')}
+    <div class="d-obj" id="d-obj"></div>
+    <div class="d-grid" id="d-grid"></div>
+    <div id="d-alertas"></div>
+    <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;margin-top:10px;">Score de opacidad</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+      <span id="d-stxt" style="font-family:'DM Mono',monospace;font-size:12px;"></span>
+      <span style="font-size:10px;color:var(--text3);">/100</span>
+    </div>
+    <div class="dbar-t"><div class="dbar-f" id="d-bar" style="width:0%;"></div></div>
+    <div style="margin-top:10px;"><a id="d-url" href="#" target="_blank" style="font-size:11px;color:var(--accent2);text-decoration:none;">Ver en SECOP II →</a></div>
+  </div>`;
+    }
+
+    // ── RENDER CASES ───────────────────────────────────────
+    function renderCases() {
+      let list = [...ALL];
+      if (fNivel === 'alta') list = list.filter(c => c.porcentaje_corrupcion_estimado >= 80);
+      else if (fNivel === 'media') list = list.filter(c => c.porcentaje_corrupcion_estimado >= 50 && c.porcentaje_corrupcion_estimado < 80);
+      else if (fNivel === 'baja') list = list.filter(c => c.porcentaje_corrupcion_estimado < 50);
+      if (fDepto) list = list.filter(c => c.Departamento === fDepto);
+      list.sort((a, b) => b.porcentaje_corrupcion_estimado - a.porcentaje_corrupcion_estimado);
+      document.getElementById('cases-badge').textContent = list.length + ' casos';
+      document.getElementById('cases-list').innerHTML = list.slice(0, 50).map((c) => {
+        const pct = c.porcentaje_corrupcion_estimado, isSel = selCase === c['ID Contrato'];
+        const rcStyle = pct >= 80 ? `border-color:var(--red);color:var(--red);background:var(--red-bg)` : pct >= 50 ? `border-color:var(--amber);color:var(--amber);background:var(--amber-bg)` : `border-color:var(--green);color:var(--green);background:var(--green-bg)`;
+        return `<div class="case-item${isSel ? ' sel' : ''}" onclick="selectCase('${c['ID Contrato']}')">
+      <div class="ring" style="${rcStyle}">${Math.round(pct)}</div>
+      <div style="min-width:0;">
+        <div class="c-id">${c['ID Contrato']}</div>
+        <div class="c-ent">${tc(c['Nombre Entidad'], 36)}</div>
+        <div class="c-dep">${c.Departamento} · ${c['Tipo de Contrato']}</div>
       </div>
-    </div>
-  </div>`;
-}
-
-// ── RENDER RELIABILITY/PRICE ───────────────────────────
-function renderReliability(items) {
-  return `
-  <div class="panel full-panel">
-    <div class="panel-header">
-      <div class="panel-title"><span class="panel-icon">💰</span> Mejor relación confiabilidad-precio</div>
-      <span class="panel-badge">Top ${items.length}</span>
-    </div>
-    <div class="panel-body no-pad">
-      <div class="contract-list">
-        ${items.slice(0,8).map((c,i) => `
-          <a class="contract-item" href="${c.URLProceso}" target="_blank">
-            <div class="rank-num rank-teal">${i+1}</div>
-            <div style="min-width:0;">
-              <div class="ci-title">${c['ID Contrato']} — ${c.Departamento}</div>
-              <div class="ci-entity">${c['Nombre Entidad']} · ${c['Proveedor Adjudicado']}</div>
-              <div class="ci-tags">
-                <span class="tag tag-teal">Conf./Precio ${c.score_confiabilidad_precio.toFixed(1)}</span>
-                <span class="tag tag-gray">${c['Tipo de Contrato']}</span>
-                <span class="tag" style="background:var(--surface2);color:${corruptionColor(c.porcentaje_corrupcion_estimado)};border-color:var(--border);">Opac. ${c.porcentaje_corrupcion_estimado}%</span>
-              </div>
-              <div style="font-size:10px;color:var(--text3);margin-top:3px;">${truncate(c['Objeto del Contrato'],90)}</div>
-            </div>
-            <div class="ci-score">
-              <div class="score-big" style="color:var(--teal)">${c.score_confiabilidad_precio.toFixed(1)}</div>
-              <div class="score-label">C/P Score</div>
-              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px;">${fmtBillions(c['Valor del Contrato'])}</div>
-            </div>
-          </a>`).join('')}
+      <div class="c-pct">
+        <div class="c-pv" style="color:${oc(pct)}">${pct}%</div>
+        <div class="c-pl">Opacidad</div>
+        <div class="c-vl">${fmtBig(c['Valor del Contrato'])}</div>
       </div>
-    </div>
-  </div>`;
-}
+    </div>`;
+      }).join('');
+    }
 
-// ── RENDER BEST GENERAL ────────────────────────────────
-function renderBestGeneral(items) {
-  return `
-  <div class="panel full-panel">
-    <div class="panel-header">
-      <div class="panel-title"><span class="panel-icon">⭐</span> Mejores contratos en general</div>
-      <span class="panel-badge">Top ${items.length}</span>
-    </div>
-    <div class="panel-body no-pad">
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Contrato</th>
-              <th>Departamento</th>
-              <th>Entidad</th>
-              <th>Proveedor</th>
-              <th>Valor</th>
-              <th>Score General</th>
-              <th>Score Historial</th>
-              <th>Opacidad</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            ${items.map((c,i) => {
-              const sg = c.score_general;
-              const sh = c.score_historial;
-              const op = c.porcentaje_corrupcion_estimado;
-              return `<tr>
-                <td class="mono">${i+1}</td>
-                <td class="id">${c['ID Contrato']}</td>
-                <td>${c.Departamento}</td>
-                <td>${truncate(c['Nombre Entidad'],30)}</td>
-                <td>${truncate(c['Proveedor Adjudicado'],28)}</td>
-                <td class="mono">${fmtBillions(c['Valor del Contrato'])}</td>
-                <td>
-                  <span class="score-badge" style="background:${scoreColor(sg,'bg')};color:${scoreColor(sg)};border:1px solid ${scoreColor(sg,'border')};">
-                    ${sg.toFixed(1)}
-                  </span>
-                </td>
-                <td>
-                  <span class="score-badge" style="background:${scoreColor(sh,'bg')};color:${scoreColor(sh)};border:1px solid ${scoreColor(sh,'border')};">
-                    ${sh.toFixed(1)}
-                  </span>
-                </td>
-                <td>
-                  <span class="score-badge" style="background:${corruptionColor(op,'bg')};color:${corruptionColor(op)};border:1px solid ${corruptionColor(op,'border')};">
-                    ${op}%
-                  </span>
-                </td>
-                <td>
-                  <a href="${c.URLProceso}" target="_blank" style="color:var(--blue);font-size:11px;text-decoration:none;">Ver →</a>
-                </td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
+    function selectCase(id) {
+      selCase = id; const c = ALL.find(x => x['ID Contrato'] === id); if (!c) return;
+      renderCases();
+      const panel = document.getElementById('detail-panel'); panel.classList.add('on');
+      document.getElementById('d-id').textContent = c['ID Contrato'];
+      document.getElementById('d-sub').textContent = `Opacidad: ${c.porcentaje_corrupcion_estimado}% · ${c['Tipo de Contrato']} · ${c.Departamento}`;
+      document.getElementById('d-obj').textContent = c['Objeto del Contrato'] || '—';
+      document.getElementById('d-grid').innerHTML = `
+    <div class="d-item"><label>Entidad</label><span>${tc(c['Nombre Entidad'], 30)}</span></div>
+    <div class="d-item"><label>Proveedor</label><span>${tc(c['Proveedor Adjudicado'], 30)}</span></div>
+    <div class="d-item"><label>Valor</label><span>${fmtBig(c['Valor del Contrato'])}</span></div>
+    <div class="d-item"><label>Modalidad</label><span style="font-size:10px;">${tc(c['Modalidad de Contratacion'], 28)}</span></div>`;
+      // Mostrar alertas del contrato si existen
+      const alertasEl = document.getElementById('d-alertas');
+      if (alertasEl) {
+        if (c.alertas) {
+          const tags = c.alertas.split(',').map(a => `<span class="tag ta" style="font-size:10px;padding:2px 8px;">${a.trim()}</span>`).join('');
+          alertasEl.innerHTML = `<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;margin-top:8px;">Alertas detectadas</div><div style="display:flex;flex-wrap:wrap;gap:4px;">${tags}</div>`;
+        } else {
+          alertasEl.innerHTML = '';
+        }
+      }
+      const pct = c.porcentaje_corrupcion_estimado, bar = document.getElementById('d-bar');
+      bar.style.background = oc(pct); bar.style.width = '0%';
+      document.getElementById('d-stxt').textContent = pct + ' — ' + (pct >= 80 ? 'Muy alto' : pct >= 50 ? 'Alto' : pct >= 25 ? 'Medio' : 'Bajo');
+      document.getElementById('d-url').href = c.URLProceso || '#';
+      setTimeout(() => { bar.style.width = pct + '%'; }, 50);
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function closeDetail() { selCase = null; document.getElementById('detail-panel').classList.remove('on'); renderCases(); }
+
+    // ── CHARTS ─────────────────────────────────────────────
+    const CDEF = {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }, tooltip: {
+          backgroundColor: '#1a1d27',
+          borderColor: 'rgba(124,58,237,.3)',
+          borderWidth: 1,
+          titleColor: '#e8eaf0',
+          bodyColor: '#9ba3bc',
+          padding: 10,
+          titleFont: { family: "'DM Mono',monospace", size: 11 },
+          bodyFont: { family: "'DM Sans',sans-serif", size: 11 }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,.04)', drawBorder: false }, ticks: { color: '#5a6280', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,.04)', drawBorder: false }, ticks: { color: '#5a6280', font: { size: 10 } } }
+      }
+    };
+
+    function buildCharts() {
+      const deptoPairs = Object.entries(PD).sort((a, b) => b[1].n - a[1].n).slice(0, 7);
+      const tipoMap = {}; ALL.forEach(c => { const t = c['Tipo de Contrato'] || 'Otro'; tipoMap[t] = (tipoMap[t] || 0) + 1; });
+      const tipoPairs = Object.entries(tipoMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const dist = { alto: 0, medio: 0, bajo: 0 };
+      ALL.forEach(c => { const p = c.porcentaje_corrupcion_estimado; if (p >= 80) dist.alto++; else if (p >= 50) dist.medio++; else dist.bajo++; });
+      setTimeout(() => {
+        new Chart(document.getElementById('ch1'), {
+          type: 'bar', data: {
+            labels: deptoPairs.map(([d]) => d.length > 14 ? d.slice(0, 13) + '…' : d),
+            datasets: [{ data: deptoPairs.map(([, v]) => v.n), backgroundColor: 'rgba(124,58,237,.2)', borderColor: 'rgba(124,58,237,.7)', borderWidth: 1, borderRadius: 4 }]
+          }, options: {
+            ...CDEF, scales: {
+              x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a6280', font: { size: 9, family: "'DM Mono',monospace" }, maxRotation: 30 } },
+              y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a6280', font: { size: 10 } } }
+            }
+          }
+        });
+        new Chart(document.getElementById('ch2'), {
+          type: 'bar', data: {
+            labels: tipoPairs.map(([t]) => t.length > 16 ? t.slice(0, 15) + '…' : t),
+            datasets: [{ data: tipoPairs.map(([, v]) => v), backgroundColor: 'rgba(45,212,191,.15)', borderColor: 'rgba(45,212,191,.6)', borderWidth: 1, borderRadius: 4 }]
+          }, options: {
+            ...CDEF, indexAxis: 'y', scales: {
+              x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5a6280', font: { size: 10 } } },
+              y: { grid: { display: false }, ticks: { color: '#5a6280', font: { size: 10, family: "'DM Mono',monospace" } } }
+            }
+          }
+        });
+        new Chart(document.getElementById('ch3'), {
+          type: 'doughnut', data: {
+            labels: ['Alta ≥80%', 'Media 50–79%', 'Baja <50%'],
+            datasets: [{ data: [dist.alto, dist.medio, dist.bajo], backgroundColor: ['rgba(248,113,113,.25)', 'rgba(251,191,36,.2)', 'rgba(52,211,153,.2)'], borderColor: ['var(--red)', 'var(--amber)', 'var(--green)'], borderWidth: 2 }]
+          }, options: {
+            ...CDEF, cutout: '62%', scales: undefined, plugins: {
+              legend: { display: true, position: 'bottom', labels: { color: '#9ba3bc', font: { size: 10, family: "'DM Mono',monospace" }, boxWidth: 10, padding: 8 } },
+              tooltip: { backgroundColor: '#1a1d27', borderColor: 'rgba(124,58,237,.3)', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: '#9ba3bc', padding: 10, titleFont: { family: "'DM Mono',monospace", size: 11 }, bodyFont: { family: "'DM Sans',sans-serif", size: 11 } }
+            }
+          }
+        });
+      }, 120);
+      return `
+  <div class="slabel" style="margin-top:16px;"><div class="si" style="background:var(--teal-bg)">📈</div><span class="st">Análisis estadístico</span></div>
+  <div class="row row-3">
+    <div class="panel"><div class="ph"><div class="pt">Top departamentos</div></div><div class="pb"><div class="chart-wrap" style="height:200px;"><canvas id="ch1"></canvas></div></div></div>
+    <div class="panel"><div class="ph"><div class="pt">Tipo de contrato</div></div><div class="pb"><div class="chart-wrap" style="height:200px;"><canvas id="ch2"></canvas></div></div></div>
+    <div class="panel"><div class="ph"><div class="pt">Distribución de opacidad</div></div><div class="pb"><div class="chart-wrap" style="height:200px;"><canvas id="ch3"></canvas></div></div></div>
+  </div>`;
+    }
+
+    // ── LEADERBOARD TABS ───────────────────────────────────
+    function buildTabs() {
+      const tabs = ['⚠️ Mayor Riesgo', '✅ Recomendados', '🏆 Contratistas', '💰 Conf./Precio', '⭐ Mejor General'];
+      return `
+  <div class="slabel" style="margin-top:16px;"><div class="si" style="background:var(--purple-bg)">🏅</div><span class="st">Leaderboard GobIA</span></div>
+  <div class="tabs" id="tabs-bar">${tabs.map((t, i) => `<button class="tab${i === activeTab ? ' on' : ''}" onclick="switchTab(${i})">${t}</button>`).join('')}</div>
+  <div id="tab-content"></div>`;
+    }
+    function switchTab(i) { activeTab = i; document.querySelectorAll('.tab').forEach((b, j) => b.classList.toggle('on', j === i)); renderTab(); }
+    function renderTab() { const el = document.getElementById('tab-content'); if (!el) return; el.innerHTML = [tabC, tabR, tabCo, tabCP, tabG][activeTab](); }
+
+    function tabC() {
+      return `<div class="panel" style="margin-bottom:12px;"><div class="pb0"><div class="clist">
+    ${LB.mayor_indice_corrupcion.slice(0, 8).map((c, i) => `
+    <a class="crow" href="${c.URLProceso}" target="_blank">
+      ${rnum(i)}
+      <div style="min-width:0;">
+        <div class="ct">${c['ID Contrato']} — ${c.Departamento}</div>
+        <div class="ce">${tc(c['Nombre Entidad'], 40)} · ${tc(c['Proveedor Adjudicado'], 30)}</div>
+        <div class="ctags">
+          <span class="tag tr">Opacidad ${c.porcentaje_corrupcion_estimado}%</span>
+          <span class="tag tn">${c['Tipo de Contrato']}</span>
+          <span class="tag ta">${tc(c['Modalidad de Contratacion'], 22)}</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">${tc(c['Objeto del Contrato'], 110)}</div>
       </div>
-    </div>
-  </div>`;
-}
-
-// ── TABS STATE ──────────────────────────────────────────
-let activeTab = 0;
-let globalData = null;
-
-function switchTab(i) {
-  activeTab = i;
-  renderTabContent();
-}
-
-function renderTabContent() {
-  if (!globalData) return;
-  const lb = globalData.leaderboard;
-  const sections = [
-    () => renderCorruption(lb.mayor_indice_corrupcion),
-    () => renderRecommended(lb.contratos_recomendados),
-    () => renderContractors(lb.contratistas_mejor_historial),
-    () => renderReliability(lb.mejor_confiabilidad_precio),
-    () => renderBestGeneral(lb.mejores_contratos_generales),
-  ];
-  document.getElementById('tab-content').innerHTML = sections[activeTab]();
-}
-
-// ── TABS COMPONENT ──────────────────────────────────────
-const TAB_CONFIG = [
-  { label: '⚠️ Mayor Riesgo', dotColor: 'var(--red)' },
-  { label: '✅ Recomendados', dotColor: 'var(--green)' },
-  { label: '🏆 Mejores Contratistas', dotColor: 'var(--blue)' },
-  { label: '💰 Conf./Precio', dotColor: 'var(--teal)' },
-  { label: '⭐ Mejor General', dotColor: 'var(--purple)' },
-];
-
-function renderTabs() {
-  return `<div class="tabs">
-    ${TAB_CONFIG.map((t,i) => `
-      <button class="tab-btn ${i===activeTab?'active':''}" onclick="switchTab(${i})">
-        ${t.label}
-      </button>`).join('')}
-  </div>`;
-}
-
-// ── MAIN RENDER ─────────────────────────────────────────
-function renderDashboard(data) {
-  globalData = data;
-  const app = document.getElementById('app');
-  app.innerHTML = `
-    ${renderKPIs(data)}
-    <div class="section-head" style="margin-top:20px;">
-      <div class="section-icon" style="background:var(--blue-bg);">📋</div>
-      <span class="section-title">Leaderboard de contratación</span>
-    </div>
-    ${renderTabs()}
-    <div id="tab-content"></div>
-  `;
-  renderTabContent();
-}
-
-// ── FETCH DATA ──────────────────────────────────────────
-async function init() {
-  document.getElementById('ts').textContent = new Date().toLocaleTimeString('es-CO');
-  try {
-    const res = await fetch(API);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    renderDashboard(data);
-    document.getElementById('ts').textContent = 'Act. ' + new Date().toLocaleTimeString('es-CO');
-  } catch (err) {
-    document.getElementById('app').innerHTML = `
-      <div class="error-box">
-        <div style="font-size:24px;margin-bottom:8px;">⚠️</div>
-        <div style="font-weight:600;margin-bottom:6px;">Error al conectar con la API</div>
-        <div style="font-size:12px;opacity:0.8;">${err.message}</div>
-        <div style="margin-top:12px;">
-          <button onclick="init()" style="background:var(--red);color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;">
-            Reintentar
-          </button>
+      <div class="csc"><div class="csv" style="color:${oc(c.porcentaje_corrupcion_estimado)}">${c.porcentaje_corrupcion_estimado}%</div><div class="csl">Opacidad</div><div class="csv2">${fmtBig(c['Valor del Contrato'])}</div></div>
+    </a>`).join('')}
+  </div></div></div>`;
+    }
+    function tabR() {
+      return `<div class="panel" style="margin-bottom:12px;"><div class="pb0"><div class="clist">
+    ${LB.contratos_recomendados.slice(0, 8).map((c, i) => `
+    <a class="crow" href="${c.URLProceso}" target="_blank">
+      ${rnum(i)}
+      <div style="min-width:0;">
+        <div class="ct">${c['ID Contrato']} — ${c.Departamento}</div>
+        <div class="ce">${tc(c['Nombre Entidad'], 40)} · ${tc(c['Proveedor Adjudicado'], 30)}</div>
+        <div class="ctags">
+          <span class="tag tg">Rec. ${c.score_recomendacion.toFixed(1)}</span>
+          <span class="tag tb">Historial ${c.score_historial.toFixed(1)}</span>
+          <span class="tag tn">${c['Tipo de Contrato']}</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">${tc(c['Objeto del Contrato'], 110)}</div>
+      </div>
+      <div class="csc"><div class="csv" style="color:var(--green)">${c.score_recomendacion.toFixed(1)}</div><div class="csl">Score</div><div class="csv2">${fmtBig(c['Valor del Contrato'])}</div></div>
+    </a>`).join('')}
+  </div></div></div>`;
+    }
+    function tabCo() {
+      return `<div class="panel" style="margin-bottom:12px;"><div class="pb0"><div class="conlist">
+    ${LB.contratistas_mejor_historial.slice(0, 10).map((c, i) => {
+        const s = c.score_historial, bc = sc(s), op = c.opacidad_promedio;
+        return `<div class="conrow">
+        ${rnum(i)}
+        <div style="min-width:0;">
+          <div class="conname">${c['Proveedor Adjudicado']}</div>
+          <div class="constats">
+            <div><div class="cosv">${c.contratos.toLocaleString('es-CO')}</div><div class="cosl">Contratos</div></div>
+            <div><div class="cosv">${c.departamentos}</div><div class="cosl">Dptos.</div></div>
+            <div><div class="cosv">${c.entidades}</div><div class="cosl">Entidades</div></div>
+            <div><div class="cosv" style="color:${oc(op)}">${op.toFixed(1)}%</div><div class="cosl">Opac. prom.</div></div>
+            <div><div class="cosv">${fmtBig(c.valor_total + '')}</div><div class="cosl">Valor total</div></div>
+          </div>
+          <div class="bar-row">
+            <span style="font-size:9px;color:var(--text3);white-space:nowrap;min-width:44px;">Historial</span>
+            <div class="btrack"><div class="bfill" style="width:${s}%;background:${bc};"></div></div>
+            <span class="bval" style="color:${bc};">${s}</span>
+          </div>
         </div>
       </div>`;
-  }
-}
+      }).join('')}
+  </div></div></div>`;
+    }
+    function tabCP() {
+      return `<div class="panel" style="margin-bottom:12px;"><div class="pb0"><div class="clist">
+    ${LB.mejor_confiabilidad_precio.slice(0, 8).map((c, i) => `
+    <a class="crow" href="${c.URLProceso}" target="_blank">
+      ${rnum(i)}
+      <div style="min-width:0;">
+        <div class="ct">${c['ID Contrato']} — ${c.Departamento}</div>
+        <div class="ce">${tc(c['Nombre Entidad'], 40)} · ${tc(c['Proveedor Adjudicado'], 30)}</div>
+        <div class="ctags">
+          <span class="tag tt">Conf./P ${c.score_confiabilidad_precio.toFixed(1)}</span>
+          <span class="tag tn">${c['Tipo de Contrato']}</span>
+          <span class="tag" style="background:${oc(c.porcentaje_corrupcion_estimado, 'bg')};color:${oc(c.porcentaje_corrupcion_estimado)};border-color:${oc(c.porcentaje_corrupcion_estimado, 'b')};">Opac. ${c.porcentaje_corrupcion_estimado}%</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">${tc(c['Objeto del Contrato'], 110)}</div>
+      </div>
+      <div class="csc"><div class="csv" style="color:var(--teal)">${c.score_confiabilidad_precio.toFixed(1)}</div><div class="csl">C/P Score</div><div class="csv2">${fmtBig(c['Valor del Contrato'])}</div></div>
+    </a>`).join('')}
+  </div></div></div>`;
+    }
+    function tabG() {
+      return `<div class="panel" style="margin-bottom:12px;"><div class="tw"><table class="dt">
+    <thead><tr><th>#</th><th>Contrato</th><th>Dpto.</th><th>Entidad</th><th>Proveedor</th><th>Valor</th><th style="text-align:center;">Score General</th><th style="text-align:center;">Historial</th><th style="text-align:center;">Opacidad</th><th></th></tr></thead>
+    <tbody>${LB.mejores_contratos_generales.map((c, i) => {
+        const sg = c.score_general, sh = c.score_historial, op = c.porcentaje_corrupcion_estimado;
+        return `<tr>
+        <td class="mono">${i + 1}</td><td class="idc">${c['ID Contrato']}</td>
+        <td>${tc(c.Departamento, 16)}</td><td>${tc(c['Nombre Entidad'], 26)}</td><td>${tc(c['Proveedor Adjudicado'], 24)}</td>
+        <td class="mono">${fmtBig(c['Valor del Contrato'])}</td>
+        <td style="text-align:center;"><span class="sbadge" style="background:${sc(sg, 'bg')};color:${sc(sg)};border:1px solid ${sc(sg, 'b')};">${sg.toFixed(1)}</span></td>
+        <td style="text-align:center;"><span class="sbadge" style="background:${sc(sh, 'bg')};color:${sc(sh)};border:1px solid ${sc(sh, 'b')};">${sh.toFixed(1)}</span></td>
+        <td style="text-align:center;"><span class="sbadge" style="background:${oc(op, 'bg')};color:${oc(op)};border:1px solid ${oc(op, 'b')};">${op}%</span></td>
+        <td><a href="${c.URLProceso}" target="_blank" style="color:var(--accent2);font-size:11px;text-decoration:none;">Ver →</a></td>
+      </tr>`;
+      }).join('')}</tbody>
+  </table></div></div>`;
+    }
 
-init();
-</script>
+    // ── FULL TABLE ─────────────────────────────────────────
+    function buildFullTable() {
+      return `
+  <div class="slabel" style="margin-top:16px;"><div class="si" style="background:var(--surface2)">📋</div><span class="st">Tabla completa de contratos</span></div>
+  <div class="panel" style="margin-bottom:20px;">
+    <div class="ph">
+      <div class="pt">🔍 Todos los contratos</div>
+      <div style="display:flex;gap:7px;align-items:center;">
+        <input id="srch" placeholder="Buscar contrato o entidad…" oninput="srchQ=this.value;renderTable()">
+        <span class="pbadge" id="tbl-count">—</span>
+      </div>
+    </div>
+    <div class="tw">
+      <table class="dt">
+        <thead><tr>
+          <th onclick="doSort('id')" style="cursor:pointer;">Contrato ↕</th>
+          <th>Departamento</th><th>Entidad</th><th>Proveedor</th><th>Tipo</th>
+          <th onclick="doSort('valor')" style="cursor:pointer;text-align:right;">Valor ↕</th>
+          <th onclick="doSort('corruption')" style="cursor:pointer;text-align:center;">Opacidad ↕</th>
+          <th style="text-align:center;">Score General</th>
+          <th style="text-align:center;">Conf./Precio</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+  </div>`;
+    }
+    function doSort(k) { if (sortK === k) sortD *= -1; else { sortK = k; sortD = -1; } renderTable(); }
+    function renderTable() {
+      const q = (srchQ || '').toLowerCase();
+      let list = ALL.filter(c => !q || (c['ID Contrato'] || '').toLowerCase().includes(q) || (c['Nombre Entidad'] || '').toLowerCase().includes(q) || (c.Departamento || '').toLowerCase().includes(q) || (c['Proveedor Adjudicado'] || '').toLowerCase().includes(q));
+      list = [...list].sort((a, b) => {
+        const av = sortK === 'valor' ? parseFloat((a['Valor del Contrato'] || '0').replace(/[$,]/g, '')) : sortK === 'id' ? a['ID Contrato'] : a.porcentaje_corrupcion_estimado;
+        const bv = sortK === 'valor' ? parseFloat((b['Valor del Contrato'] || '0').replace(/[$,]/g, '')) : sortK === 'id' ? b['ID Contrato'] : b.porcentaje_corrupcion_estimado;
+        return av > bv ? sortD : av < bv ? -sortD : 0;
+      });
+      document.getElementById('tbl-count').textContent = list.length + ' resultados';
+      document.getElementById('tbl-body').innerHTML = list.slice(0, 80).map(c => {
+        const op = c.porcentaje_corrupcion_estimado, sg = c.score_general, cp = c.score_confiabilidad_precio;
+        return `<tr>
+      <td class="idc">${c['ID Contrato']}</td>
+      <td>${tc(c.Departamento, 18)}</td>
+      <td>${tc(c['Nombre Entidad'], 28)}</td>
+      <td>${tc(c['Proveedor Adjudicado'], 24)}</td>
+      <td style="font-size:10px;color:var(--text3);">${tc(c['Tipo de Contrato'], 18)}</td>
+      <td class="mono" style="text-align:right;">${fmtBig(c['Valor del Contrato'])}</td>
+      <td style="text-align:center;"><span class="sbadge" style="background:${oc(op, 'bg')};color:${oc(op)};border:1px solid ${oc(op, 'b')};">${op}%</span></td>
+      <td style="text-align:center;"><span class="sbadge" style="background:${sc(sg, 'bg')};color:${sc(sg)};border:1px solid ${sc(sg, 'b')};">${sg.toFixed(1)}</span></td>
+      <td style="text-align:center;"><span class="sbadge" style="background:${sc(cp, 'bg')};color:${sc(cp)};border:1px solid ${sc(cp, 'b')};">${cp.toFixed(1)}</span></td>
+      <td><a href="${c.URLProceso}" target="_blank" style="color:var(--accent2);font-size:11px;text-decoration:none;">Ver →</a></td>
+    </tr>`;
+      }).join('');
+    }
+
+    // ── INIT ───────────────────────────────────────────────
+    async function init() {
+      document.getElementById('ts').textContent = new Date().toLocaleTimeString('es-CO');
+      try {
+        const res = await fetch(API, { method: 'GET', mode: 'cors', headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' — ' + res.statusText);
+        const data = await res.json();
+        if (!data || (!data.leaderboard && !data.mayor_indice_corrupcion)) {
+          throw new Error('Estructura de datos inesperada en la respuesta');
+        }
+        processData(data);
+        document.getElementById('api-status').innerHTML = '<div class="dot-live"></div>API activa';
+        document.getElementById('ts').textContent = 'Act. ' + new Date().toLocaleTimeString('es-CO');
+        // Mostrar nombre del agente
+        const agEl = document.getElementById('api-agent');
+        if (agEl) { agEl.style.display = 'block'; }
+        document.getElementById('app').innerHTML =
+          buildKPIs() +
+          buildMapSection() +
+          buildDetailSection() +
+          buildCharts() +
+          buildTabs() +
+          buildFullTable();
+        renderCases();
+        renderTable();
+        renderTab();
+        initMap();
+      } catch (err) {
+        document.getElementById('api-status').innerHTML = '<span style="color:var(--red)">⚠ Sin conexión</span>';
+        document.getElementById('app').innerHTML = `<div class="err">
+      <div style="font-size:22px;margin-bottom:7px;">⚠️</div>
+      <div style="font-weight:600;margin-bottom:5px;">Error al conectar con la API</div>
+      <div style="font-size:11px;opacity:.8;">${err.message}</div>
+      <button onclick="init()" style="margin-top:12px;background:var(--accent);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;">Reintentar</button>
+    </div>`;
+      }
+    }
+    init();
+  </script>
 </body>
+
 </html>
