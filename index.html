@@ -4,37 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SECOP II — Monitor de Corrupción en Contratación Pública</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0c0f;
-  --bg2: #11141a;
-  --bg3: #181c24;
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.13);
-  --text: #e8eaf0;
-  --text2: #8a90a0;
-  --text3: #555c70;
-  --red: #e84545;
-  --red-dim: rgba(232,69,69,0.12);
-  --red-glow: rgba(232,69,69,0.25);
-  --amber: #f5a623;
-  --amber-dim: rgba(245,166,35,0.12);
+  --bg: #0f1115;
+  --bg2: #171a21;
+  --bg3: #1e232d;
+  --border: #2a313d;
+  --border2: #3b4453;
+  --text: #eef2f7;
+  --text2: #b2bccb;
+  --text3: #7d8899;
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --red-glow: rgba(239,68,68,0.16);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
   --blue: #3b82f6;
   --blue-dim: rgba(59,130,246,0.12);
   --green: #22c55e;
   --green-dim: rgba(34,197,94,0.1);
   --teal: #14b8a6;
-  --accent: #e84545;
-  --radius: 8px;
-  --radius-lg: 12px;
+  --accent: #ef4444;
+  --radius: 10px;
+  --radius-lg: 14px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -50,29 +50,29 @@ body {
 /* ── HEADER */
 .header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(10,12,15,0.92);
-  backdrop-filter: blur(12px);
+  background: rgba(15,17,21,0.96);
+  backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--border);
   padding: 0 28px;
   height: 56px;
   display: flex; align-items: center; justify-content: space-between;
 }
 .header-left { display: flex; align-items: center; gap: 14px; }
-.logo { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.12em; color: var(--red); text-transform: uppercase; }
+.logo { font-family: 'Inter', 'Segoe UI', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: var(--red); text-transform: uppercase; }
 .logo-sep { color: var(--border2); }
-.header-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 500; color: var(--text2); }
+.header-title { font-family: 'Inter', 'Segoe UI', sans-serif; font-size: 14px; font-weight: 500; color: var(--text2); }
 .header-right { display: flex; align-items: center; gap: 16px; }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-.status-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); }
-.last-update { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); }
+@keyframes pulse { 0%,100%{opacity:0.9} 50%{opacity:0.55} }
+.status-text { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); }
+.last-update { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); }
 
 /* ── MAIN LAYOUT */
 .main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
 
 /* ── SECTION TITLE */
 .section-label {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.15em;
   color: var(--text3);
@@ -81,46 +81,43 @@ body {
   padding-left: 2px;
 }
 
-/* ── KPI STRIP */
-.kpi-grid {
+/* ── STRATEGIC STRIP */
+.strategic-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
   margin-bottom: 24px;
 }
-@media(max-width:900px){ .kpi-grid{ grid-template-columns: repeat(3,1fr); } }
-@media(max-width:520px){ .kpi-grid{ grid-template-columns: repeat(2,1fr); } }
+@media(max-width:1200px){ .strategic-grid{ grid-template-columns: repeat(3,1fr); } }
+@media(max-width:820px){ .strategic-grid{ grid-template-columns: repeat(2,1fr); } }
+@media(max-width:560px){ .strategic-grid{ grid-template-columns: 1fr; } }
 
-.kpi {
+.strategic-card {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 14px;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, transform 0.15s;
 }
-.kpi:hover { border-color: var(--border2); }
-.kpi::before {
+.strategic-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.strategic-card::before {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 2px;
   background: var(--accent-color, var(--border2));
-  opacity: 0.7;
+  opacity: 1;
 }
-.kpi.red { --accent-color: var(--red); }
-.kpi.amber { --accent-color: var(--amber); }
-.kpi.blue { --accent-color: var(--blue); }
-.kpi.green { --accent-color: var(--green); }
+.strategic-card.red { --accent-color: var(--red); }
+.strategic-card.amber { --accent-color: var(--amber); }
+.strategic-card.blue { --accent-color: var(--blue); }
+.strategic-card.green { --accent-color: var(--green); }
+.strategic-card.teal { --accent-color: var(--teal); }
 
-.kpi-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-.kpi-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; color: var(--text); }
-.kpi.red .kpi-value { color: var(--red); }
-.kpi.amber .kpi-value { color: var(--amber); }
-.kpi.green .kpi-value { color: var(--green); }
-.kpi-sub { font-size: 10px; color: var(--text3); margin-top: 5px; }
-.kpi-delta { font-family: 'DM Mono', monospace; font-size: 10px; margin-top: 4px; }
-.kpi-delta.up { color: var(--red); }
-.kpi-delta.down { color: var(--green); }
+.strategic-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.strategic-title { font-family: 'Inter', 'Segoe UI', sans-serif; font-size: 16px; font-weight: 700; line-height: 1.25; color: var(--text); }
+.strategic-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text2); margin-top: 8px; }
+.strategic-sub { font-size: 11px; color: var(--text3); margin-top: 6px; line-height: 1.35; }
 
 /* ── MAIN GRID */
 .content-grid {
@@ -145,17 +142,17 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .panel-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   font-size: 13px; font-weight: 600;
   color: var(--text);
   display: flex; align-items: center; gap: 8px;
 }
 .panel-title .dot { width: 6px; height: 6px; border-radius: 50%; }
 .panel-badge {
-  font-family: 'DM Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px; color: var(--text3);
   background: var(--bg3);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border2);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -166,18 +163,18 @@ body {
 .map-tooltip {
   position: absolute;
   background: var(--bg);
-  border: 1px solid var(--border2);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 10px 14px;
   pointer-events: none;
   display: none;
   z-index: 20;
   min-width: 180px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 .map-tooltip .tt-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
 .map-tooltip .tt-row { display: flex; justify-content: space-between; gap: 16px; font-size: 11px; color: var(--text2); margin-top: 3px; }
-.map-tooltip .tt-val { font-family: 'DM Mono', monospace; color: var(--text); }
+.map-tooltip .tt-val { font-family: 'JetBrains Mono', monospace; color: var(--text); }
 
 .map-legend { display: flex; align-items: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
 .map-legend-label { font-size: 10px; color: var(--text3); }
@@ -261,7 +258,7 @@ body {
 /* ── DETAIL PANEL */
 .detail-panel {
   background: var(--bg2);
-  border: 1px solid var(--red);
+  border: 1px solid var(--border2);
   border-radius: var(--radius-lg);
   padding: 20px;
   margin-bottom: 16px;
@@ -273,6 +270,7 @@ body {
 
 .detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
 .detail-ref { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; color: var(--red); }
+.detail-ref { font-family: 'JetBrains Mono', monospace; }
 .detail-nivel { font-size: 11px; color: var(--text2); margin-top: 3px; }
 .close-btn {
   background: none; border: none; color: var(--text3); cursor: pointer;
@@ -289,7 +287,7 @@ body {
 .detail-objeto {
   background: var(--bg3);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--red);
+  border-left: 3px solid var(--border2);
   border-radius: var(--radius);
   padding: 10px 14px;
   font-size: 12px; color: var(--text2);
@@ -299,12 +297,12 @@ body {
 
 .detail-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 .detail-flag {
-  font-family: 'DM Mono', monospace; font-size: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
   padding: 4px 10px;
   border-radius: 4px;
-  border: 1px solid var(--red);
-  color: var(--red);
-  background: var(--red-dim);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  background: var(--bg3);
 }
 
 .score-bar-wrap { margin-top: 4px; }
@@ -341,6 +339,8 @@ body {
 .tab-btn:hover { color: var(--text2); }
 .tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
 
+#colombia-map path { transition: fill 0.2s ease, opacity 0.15s ease; }
+
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 </style>
@@ -366,8 +366,8 @@ body {
 <main class="main">
 
   <!-- KPIs -->
-  <div class="section-label">Resumen general</div>
-  <div class="kpi-grid" id="kpi-grid"></div>
+  <div class="section-label">Inteligencia estratégica</div>
+  <div class="strategic-grid" id="strategic-grid"></div>
 
   <!-- DETAIL PANEL (hidden until selection) -->
   <div class="detail-panel" id="detail-panel">
@@ -550,6 +550,19 @@ const ENTIDADES = [
   "Hospital Regional","Secretaría de Obras","ESE Hospital","ICBF Regional"
 ];
 
+const CONTRATISTAS = [
+  "Unión Temporal Orion",
+  "Consorcio Vial del Caribe",
+  "Infraestructura Andina S.A.S.",
+  "Servicios Integrales del Norte",
+  "Constructora Horizonte",
+  "TecnoSalud Colombia",
+  "Soluciones Públicas 360",
+  "Grupo Estratégico Delta",
+  "Ingeniería Territorial S.A.",
+  "Alianza Cívica de Proyectos"
+];
+
 const TIPOS = [
   "PRESTACIÓN DE SERVICIOS","OBRA PÚBLICA","SUMINISTRO",
   "CONSULTORÍA","CONCESIÓN","CONTRATO INTERADMINISTRATIVO"
@@ -604,6 +617,7 @@ function genContratos(n){
     arr.push({
       id:i,ref:"CON-2024-"+String(srnd(100000,999999)),
       entidad:spick(ENTIDADES)+" de "+depto.split(" ")[0],
+      contratista: spick(CONTRATISTAS),
       depto,tipo:spick(TIPOS),objeto:spick(OBJETOS),
       valor,valor_adic:srnd(0,1)?srnd(5,valor*2/1e6)*1e6:null,
       dias:srnd(-15,4500),score,nivel,flags,
@@ -628,29 +642,159 @@ ANOMALOS.forEach(c=>{
 });
 
 // ═══════════════════════════════════════════════════════
-// KPIs
+// PANEL ESTRATÉGICO
 // ═══════════════════════════════════════════════════════
-function initKPIs(){
-  const totalValor = ANOMALOS.reduce((s,c)=>s+c.valor,0);
-  const kpis=[
-    {label:"Contratos analizados",val:CONTRATOS.length.toLocaleString("es-CO"),sub:"Dataset completo",cls:""},
-    {label:"Anomalías detectadas",val:ANOMALOS.length.toLocaleString("es-CO"),sub:"Score ≥ 25",cls:"amber"},
-    {label:"Riesgo muy alto",val:CONTRATOS.filter(c=>c.nivel==="MUY ALTO").length.toLocaleString("es-CO"),sub:"Score ≥ 80",cls:"red"},
-    {label:"Valor en riesgo",val:"$"+Math.round(totalValor/1e12*10)/10+"B",sub:"COP estimado",cls:"red"},
-    {label:"Dptos. críticos",val:Object.values(POR_DEPTO).filter(d=>d.muy_alto>=2).length,sub:"Con ≥2 casos muy alto",cls:"amber"},
-    {label:"PDFs indexados",val:"143",sub:"Listos para revisión IA",cls:"green"},
+function initStrategicPanels(){
+  const highestRisk = [...CONTRATOS].sort((a,b)=>b.score-a.score)[0];
+  const targetCompany = "Infraestructura Andina S.A.S.";
+
+  const bestForCompany = [...CONTRATOS]
+    .filter(c=>c.tipo.includes("OBRA") || c.tipo.includes("CONSULTOR"))
+    .sort((a,b)=>(b.valor*(1-b.score/100))-(a.valor*(1-a.score/100)))[0];
+
+  const byContractor = {};
+  CONTRATOS.forEach(c=>{
+    if(!byContractor[c.contratista]) byContractor[c.contratista]={n:0,score:0,value:0};
+    byContractor[c.contratista].n += 1;
+    byContractor[c.contratista].score += c.score;
+    byContractor[c.contratista].value += c.valor;
+  });
+
+  const bestContractors = Object.entries(byContractor)
+    .filter(([,v])=>v.n >= 5)
+    .map(([name,v])=>({name, avgScore: Math.round(v.score/v.n), n: v.n}))
+    .sort((a,b)=>a.avgScore-b.avgScore || b.n-a.n)
+    .slice(0,3);
+
+  const bestPaidReliable = [...CONTRATOS]
+    .map(c=>({...c,rel:c.valor*(1-c.score/100)}))
+    .sort((a,b)=>b.rel-a.rel)
+    .slice(0,3);
+
+  const bestGeneral = [...CONTRATOS]
+    .map(c=>({...c,rank:(100-c.score)*0.6 + (c.valor/1e9)*0.4 - c.flags.length*3}))
+    .sort((a,b)=>b.rank-a.rank)
+    .slice(0,3);
+
+  const cards = [
+    {
+      cls:"red",
+      label:"Contrato con mayor índice de corrupción",
+      title: highestRisk.ref,
+      value: `Score ${highestRisk.score}% · ${highestRisk.depto}`,
+      sub: `${highestRisk.entidad} · ${fmtCOP(highestRisk.valor)}`
+    },
+    {
+      cls:"blue",
+      label:"Recomendado para empresa objetivo",
+      title: bestForCompany.ref,
+      value: `${targetCompany} · Score ${bestForCompany.score}%`,
+      sub: `${bestForCompany.tipo} · ${fmtCOP(bestForCompany.valor)}`
+    },
+    {
+      cls:"green",
+      label:"Contratistas con mejor historial",
+      title: bestContractors.map(x=>x.name.split(" ").slice(0,2).join(" ")).join(" · "),
+      value: bestContractors.map(x=>`${x.avgScore}%`).join(" · "),
+      sub: "Promedio histórico de riesgo más bajo"
+    },
+    {
+      cls:"amber",
+      label:"Mejor pagados por confiabilidad/precio",
+      title: bestPaidReliable[0].ref,
+      value: `${fmtCOP(bestPaidReliable[0].valor)} · Score ${bestPaidReliable[0].score}%`,
+      sub: `Top 3: ${bestPaidReliable.map(x=>x.ref).join(", ")}`
+    },
+    {
+      cls:"teal",
+      label:"Mejores contratos en general",
+      title: bestGeneral[0].ref,
+      value: `${bestGeneral[0].depto} · ${bestGeneral[0].tipo}`,
+      sub: `Top 3 global: ${bestGeneral.map(x=>x.ref).join(", ")}`
+    }
   ];
-  document.getElementById("kpi-grid").innerHTML=kpis.map(k=>`
-    <div class="kpi ${k.cls}">
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-value">${k.val}</div>
-      <div class="kpi-sub">${k.sub}</div>
+
+  document.getElementById("strategic-grid").innerHTML = cards.map(c=>`
+    <div class="strategic-card ${c.cls}">
+      <div class="strategic-label">${c.label}</div>
+      <div class="strategic-title">${c.title}</div>
+      <div class="strategic-value">${c.value}</div>
+      <div class="strategic-sub">${c.sub}</div>
     </div>`).join("");
 }
 
 // ═══════════════════════════════════════════════════════
 // MAPA DE COLOMBIA
 // ═══════════════════════════════════════════════════════
+const COLOMBIA_GEOJSON_URLS = [
+  "https://gist.githubusercontent.com/john-guerra/43c7656821069d00dcbc/raw/be6a6e239cd5b5b803c6e7c2ec405b793a9064dd/Colombia.geo.json",
+  "https://raw.githubusercontent.com/marcovega/colombia-json/master/colombia.min.json",
+  "https://raw.githubusercontent.com/ans-4175/geojson/master/colombia.geo.json",
+  "https://raw.githubusercontent.com/angelnmara/geojson/master/colombia.geojson"
+];
+
+function normalizeDeptoName(name){
+  if(!name) return "";
+  const clean = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const aliases = {
+    "ARCHIPIELAGO DE SAN ANDRES PROVIDENCIA Y SANTA CATALINA": "SAN ANDRES",
+    "SAN ANDRES PROVIDENCIA Y SANTA CATALINA": "SAN ANDRES",
+    "NORTE SANTANDER": "NORTE DE SANTANDER",
+    "VALLE": "VALLE DEL CAUCA",
+    "GUAJIRA": "LA GUAJIRA",
+    "BOGOTA D C": "CUNDINAMARCA",
+    "BOGOTA, D.C.": "CUNDINAMARCA"
+  };
+  return aliases[clean] || clean;
+}
+
+function getFeatureDeptoName(feature){
+  const props = feature.properties || {};
+  return props.NOMBRE_DPT || props.NOMBRE || props.DPTO_CNMBR || props.NAME_1 || props.departamento || props.Departamento || props.NAME || "";
+}
+
+function setDeptoFilterByNormalized(normalizedDepto){
+  const select = document.getElementById("filter-depto");
+  const option = [...select.options].find(opt => normalizeDeptoName(opt.value) === normalizedDepto);
+  if(option){
+    select.value = option.value;
+    renderCasos();
+    document.getElementById("casos-list").scrollIntoView({behavior:"smooth"});
+  }
+}
+
+async function loadColombiaGeoJSON(){
+  for(const url of COLOMBIA_GEOJSON_URLS){
+    try{
+      const data = await d3.json(url);
+      // GeoJSON directo
+      if(data && Array.isArray(data.features) && data.features.length){
+        return data;
+      }
+      // TopoJSON -> convertir a GeoJSON
+      if(data && data.type === "Topology" && data.objects){
+        const objectKeys = Object.keys(data.objects);
+        if(objectKeys.length){
+          const firstObject = data.objects[objectKeys[0]];
+          const geo = topojson.feature(data, firstObject);
+          if(geo && Array.isArray(geo.features) && geo.features.length){
+            return geo;
+          }
+        }
+      }
+    } catch(err){
+      console.warn("GeoJSON fallback:", url, err);
+    }
+  }
+  throw new Error("No se pudo cargar GeoJSON de Colombia.");
+}
+
 // Mapa SVG simplificado de Colombia por departamentos (paths aproximados)
 // En producción reemplazar por fetch de topojson real
 const COLOMBIA_APPROX = {
@@ -689,10 +833,11 @@ const COLOMBIA_APPROX = {
   "SAN ANDRÉS":    "M50,60 L70,55 L72,78 L52,80 Z",
 };
 
-function initMap(){
+function initMapFallback(){
   const svg=d3.select("#colombia-map");
   const container=document.getElementById("map-container");
   const W=container.clientWidth||580, H=420;
+  svg.selectAll("*").remove();
   svg.attr("viewBox",`0 0 ${W} ${H}`);
 
   const maxN=Math.max(...Object.values(POR_DEPTO).map(d=>d.n),1);
@@ -732,9 +877,7 @@ function initMap(){
         tooltip.style.display="none";
       })
       .on("click",function(){
-        document.getElementById("filter-depto").value=nombre;
-        renderCasos();
-        document.getElementById("casos-list").scrollIntoView({behavior:"smooth"});
+        setDeptoFilterByNormalized(normalizeDeptoName(nombre));
       });
 
     if(data.n>0){
@@ -750,6 +893,124 @@ function initMap(){
         .text(data.n>0?data.n:"");
     }
   });
+}
+
+async function initMap(){
+  const svg=d3.select("#colombia-map");
+  const container=document.getElementById("map-container");
+  const W=container.clientWidth||580, H=420;
+  svg.selectAll("*").remove();
+  svg.attr("viewBox",`0 0 ${W} ${H}`);
+
+  const tooltip=document.getElementById("map-tooltip");
+  const riskByDepto = {};
+  Object.entries(POR_DEPTO).forEach(([depto, stats])=>{
+    riskByDepto[normalizeDeptoName(depto)] = stats;
+  });
+
+  try{
+    const geojson = await loadColombiaGeoJSON();
+    document.getElementById("map-badge").textContent = "Colombia · geometría real";
+    const projection = d3.geoMercator().fitSize([W, H], geojson);
+    const path = d3.geoPath(projection);
+
+    const maxScore = Math.max(
+      ...Object.values(riskByDepto).map(d=>d.n > 0 ? Math.round(d.score_sum / d.n) : 0),
+      1
+    );
+    const colorScale = d3.scaleSequential([0, maxScore], d3.interpolateRgb("#1a2535", "#e84545"));
+
+    svg.selectAll("path")
+      .data(geojson.features)
+      .enter()
+      .append("path")
+      .attr("d", path)
+      .attr("fill", (feature)=>{
+        const deptoName = normalizeDeptoName(getFeatureDeptoName(feature));
+        const data = riskByDepto[deptoName] || {n:0, score_sum:0};
+        if(data.n === 0) return "#181c24";
+        const scoreAvg = Math.round(data.score_sum / data.n);
+        return colorScale(scoreAvg);
+      })
+      .attr("stroke", "#0a0c0f")
+      .attr("stroke-width", 1)
+      .attr("cursor", "pointer")
+      .style("transition", "opacity 0.15s")
+      .on("mouseover", function(event, feature){
+        d3.select(this).attr("opacity", 0.8);
+        const rawName = getFeatureDeptoName(feature);
+        const deptoName = normalizeDeptoName(rawName);
+        const data = riskByDepto[deptoName] || {n:0,score_sum:0,muy_alto:0,valor:0};
+        const scoreAvg = data.n > 0 ? Math.round(data.score_sum / data.n) : 0;
+        tooltip.style.display="block";
+        document.getElementById("tt-name").textContent = rawName || deptoName;
+        document.getElementById("tt-casos").textContent = data.n.toLocaleString("es-CO");
+        document.getElementById("tt-score").textContent = scoreAvg;
+        document.getElementById("tt-alto").textContent = data.muy_alto.toLocaleString("es-CO");
+        document.getElementById("tt-valor").textContent = fmtM(data.valor);
+      })
+      .on("mousemove", function(event){
+        const rect=container.getBoundingClientRect();
+        const x=event.clientX-rect.left, y=event.clientY-rect.top;
+        tooltip.style.left=(x+12)+"px";
+        tooltip.style.top=(y-10)+"px";
+      })
+      .on("mouseout", function(){
+        d3.select(this).attr("opacity",1);
+        tooltip.style.display="none";
+      })
+      .on("click", function(event, feature){
+        const deptoName = normalizeDeptoName(getFeatureDeptoName(feature));
+        setDeptoFilterByNormalized(deptoName);
+      });
+
+    // San Andres dibujado dentro del mapa (mar Caribe), no en recuadro externo.
+    const saData = riskByDepto["SAN ANDRES"] || {n:0,score_sum:0,muy_alto:0,valor:0};
+    const saScore = saData.n > 0 ? Math.round(saData.score_sum / saData.n) : 0;
+    const saFill = saData.n === 0 ? "#181c24" : colorScale(saScore);
+    const saX = Math.round(W * 0.16);
+    const saY = Math.round(H * 0.18);
+
+    const sanAndres = svg.append("g");
+    sanAndres.append("ellipse")
+      .attr("cx", saX).attr("cy", saY)
+      .attr("rx", 7).attr("ry", 4.5)
+      .attr("fill", saFill).attr("stroke", "#0a0c0f").attr("stroke-width", 1.2)
+      .attr("cursor", "pointer")
+      .on("mouseover", function(){
+        d3.select(this).attr("opacity", 0.8);
+        tooltip.style.display="block";
+        document.getElementById("tt-name").textContent = "SAN ANDRES";
+        document.getElementById("tt-casos").textContent = saData.n.toLocaleString("es-CO");
+        document.getElementById("tt-score").textContent = saScore;
+        document.getElementById("tt-alto").textContent = saData.muy_alto.toLocaleString("es-CO");
+        document.getElementById("tt-valor").textContent = fmtM(saData.valor);
+      })
+      .on("mousemove", function(event){
+        const rect=container.getBoundingClientRect();
+        const x=event.clientX-rect.left, y=event.clientY-rect.top;
+        tooltip.style.left=(x+12)+"px";
+        tooltip.style.top=(y-10)+"px";
+      })
+      .on("mouseout", function(){
+        d3.select(this).attr("opacity",1);
+        tooltip.style.display="none";
+      })
+      .on("click", function(){
+        setDeptoFilterByNormalized("SAN ANDRES");
+      });
+
+    sanAndres.append("text")
+      .attr("x", saX + 10).attr("y", saY + 3)
+      .attr("font-size", "8")
+      .attr("fill", "rgba(255,255,255,0.75)")
+      .attr("pointer-events", "none")
+      .text("San Andres");
+  } catch(err){
+    console.warn("No se pudo cargar mapa real. Usando fallback aproximado.", err);
+    document.getElementById("map-badge").textContent = "Colombia · modo fallback";
+    initMapFallback();
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -968,7 +1229,7 @@ function renderTabla(){
 document.getElementById("last-update").textContent=
   "Actualizado: "+new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"});
 
-initKPIs();
+initStrategicPanels();
 initDeptoFilter();
 renderCasos();
 renderTabla();
