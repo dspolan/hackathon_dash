@@ -53,6 +53,7 @@
   <script>
     const API = 'https://gobiapi.tobaru.xyz/api/leaderboard/gobia';
     const GEO_URLS = [
+      'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/colombia/colombia-departments.json',
       'https://gist.githubusercontent.com/john-guerra/43c7656821069d00dcbc/raw/be6a6e239cd5b5b803c6e7c2ec405b793a9064dd/Colombia.geo.json',
       'https://raw.githubusercontent.com/marcovega/colombia-json/master/colombia.min.json'
     ];
@@ -198,63 +199,314 @@
     // ── MAP ────────────────────────────────────────────────
     function normD(s) {
       if (!s) return '';
-      const c = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
-      const al = { 'ARCHIPIELAGO DE SAN ANDRES PROVIDENCIA Y SANTA CATALINA': 'SAN ANDRES', 'NORTE SANTANDER': 'NORTE DE SANTANDER', 'VALLE': 'VALLE DEL CAUCA', 'BOGOTA D C': 'CUNDINAMARCA', 'BOGOTA, D.C.': 'CUNDINAMARCA', 'DISTRITO CAPITAL DE BOGOTA': 'CUNDINAMARCA', 'GUAJIRA': 'LA GUAJIRA' };
+      // Quitar tildes, mayúsculas, espacios extra
+      const c = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+      // Diccionario completo de aliases — cubre todas las variantes que llegan de SECOP/API
+      const al = {
+        // San Andrés (todas sus variantes)
+        'ARCHIPIELAGO DE SAN ANDRES PROVIDENCIA Y SANTA CATALINA': 'SAN ANDRES',
+        'ARCHIPIELAGO DE SAN ANDRES': 'SAN ANDRES',
+        'SAN ANDRES PROVIDENCIA Y SANTA CATALINA': 'SAN ANDRES',
+        'SAN ANDRES Y PROVIDENCIA': 'SAN ANDRES',
+        'SAN ANDRES PROVIDENCIA': 'SAN ANDRES',
+        'SAN ANDRES': 'SAN ANDRES',
+        // Bogotá D.C. → se mapea a su propio nombre canónico
+        'BOGOTA D C': 'BOGOTA D.C.',
+        'BOGOTA DC': 'BOGOTA D.C.',
+        'BOGOTA D.C.': 'BOGOTA D.C.',
+        'BOGOTA': 'BOGOTA D.C.',
+        'DISTRITO CAPITAL DE BOGOTA': 'BOGOTA D.C.',
+        'DISTRITO CAPITAL': 'BOGOTA D.C.',
+        'BOGOTA D C ': 'BOGOTA D.C.',
+        'SANTA FE DE BOGOTA': 'BOGOTA D.C.',
+        // Cundinamarca (sin Bogotá)
+        'CUNDINAMARCA': 'CUNDINAMARCA',
+        // Variantes sin artículo
+        'NORTE SANTANDER': 'NORTE DE SANTANDER',
+        'NORTE DE SANTANDER': 'NORTE DE SANTANDER',
+        'VALLE': 'VALLE DEL CAUCA',
+        'VALLE DEL CAUCA': 'VALLE DEL CAUCA',
+        'GUAJIRA': 'LA GUAJIRA',
+        'LA GUAJIRA': 'LA GUAJIRA',
+        // Amazonas
+        'AMAZONAS': 'AMAZONAS',
+        // Antioquia
+        'ANTIOQUIA': 'ANTIOQUIA',
+        // Arauca
+        'ARAUCA': 'ARAUCA',
+        // Atlántico
+        'ATLANTICO': 'ATLANTICO',
+        // Bolívar
+        'BOLIVAR': 'BOLIVAR',
+        // Boyacá
+        'BOYACA': 'BOYACA',
+        // Caldas
+        'CALDAS': 'CALDAS',
+        // Caquetá
+        'CAQUETA': 'CAQUETA',
+        // Casanare
+        'CASANARE': 'CASANARE',
+        // Cauca
+        'CAUCA': 'CAUCA',
+        // Cesar
+        'CESAR': 'CESAR',
+        // Chocó
+        'CHOCO': 'CHOCO',
+        // Córdoba
+        'CORDOBA': 'CORDOBA',
+        // Guainía
+        'GUAINIA': 'GUAINIA',
+        // Guaviare
+        'GUAVIARE': 'GUAVIARE',
+        // Huila
+        'HUILA': 'HUILA',
+        // Magdalena
+        'MAGDALENA': 'MAGDALENA',
+        // Meta
+        'META': 'META',
+        // Nariño
+        'NARINO': 'NARINO',
+        // Putumayo
+        'PUTUMAYO': 'PUTUMAYO',
+        // Quindío
+        'QUINDIO': 'QUINDIO',
+        // Risaralda
+        'RISARALDA': 'RISARALDA',
+        // Santander
+        'SANTANDER': 'SANTANDER',
+        // Sucre
+        'SUCRE': 'SUCRE',
+        // Tolima
+        'TOLIMA': 'TOLIMA',
+        // Vaupés
+        'VAUPES': 'VAUPES',
+        // Vichada
+        'VICHADA': 'VICHADA',
+      };
       return al[c] || c;
     }
-    function featN(f) { const p = f.properties || {}; return p.NOMBRE_DPT || p.NOMBRE || p.DPTO_CNMBR || p.NAME_1 || p.departamento || p.Departamento || p.NAME || ''; }
+    // Normaliza también nombres de features del GeoJSON (pueden tener tildes)
+    function normFeat(s) { return normD(s); }
+    function featN(f) {
+      const p = f.properties || {};
+      // Busca cualquier propiedad que contenga el nombre del departamento
+      return p.NOMBRE_DPT || p.NOMBRE || p.DPTO_CNMBR || p.NAME_1 || p.name_1 ||
+        p.departamento || p.Departamento || p.NAME || p.name ||
+        p.DPTO || p.dpto || p.NOM_DEP || p.nom_dep || '';
+    }
 
     async function initMap() {
       const svg = d3.select('#col-map');
       const cont = document.getElementById('map-container');
-      const W = cont.clientWidth || 560, H = 400;
+      const W = cont.clientWidth || 560, H = 420;
       svg.selectAll('*').remove();
       svg.attr('viewBox', `0 0 ${W} ${H}`);
       const tt = document.getElementById('mtt');
+
+      // Construir mapa de riesgo con claves normalizadas
       const risk = {};
       Object.entries(PD).forEach(([d, s]) => { risk[normD(d)] = s; });
       const maxO = Math.max(...Object.values(risk).map(d => d.maxOpac), 1);
-      // Paleta oscura morada→roja
       const col = d3.scaleSequential([0, maxO], d3.interpolateRgb('#3b1f6e', '#f87171'));
+
+      // Cargar GeoJSON
       let geo = null;
       for (const url of GEO_URLS) {
         try {
           const raw = await d3.json(url);
           if (raw && Array.isArray(raw.features) && raw.features.length) { geo = raw; break; }
-          if (raw && raw.type === 'Topology') { const k = Object.keys(raw.objects)[0]; const g = topojson.feature(raw, raw.objects[k]); if (g && g.features && g.features.length) { geo = g; break; } }
+          if (raw && raw.type === 'Topology') {
+            const k = Object.keys(raw.objects)[0];
+            const g = topojson.feature(raw, raw.objects[k]);
+            if (g && g.features && g.features.length) { geo = g; break; }
+          }
         } catch (e) { console.warn('GeoJSON:', url, e); }
       }
       if (!geo) { document.getElementById('map-badge').textContent = 'Sin geometría'; return; }
       document.getElementById('map-badge').textContent = 'Colombia · geometría real';
-      const proj = d3.geoMercator().fitSize([W, H], geo);
-      const path = d3.geoPath(proj);
-      svg.selectAll('path').data(geo.features).enter().append('path')
-        .attr('d', path)
-        .attr('fill', f => { const d = normD(featN(f)); const s = risk[d]; return (!s || s.n === 0) ? '#1f2333' : col(s.maxOpac); })
-        .attr('stroke', '#0d0f14').attr('stroke-width', 0.7).attr('cursor', 'pointer').style('transition', 'opacity .15s')
-        .on('mouseover', function (e, f) {
-          d3.select(this).attr('opacity', 0.75);
-          const raw = featN(f), d = normD(raw), s = risk[d] || { n: 0, opacSum: 0, maxOpac: 0, valor: 0 };
-          const avg = s.n > 0 ? (s.opacSum / s.n).toFixed(0) : 0;
-          tt.style.display = 'block';
-          document.getElementById('tt-name').textContent = raw || d;
-          document.getElementById('tt-n').textContent = s.n;
-          document.getElementById('tt-avg').textContent = avg + '%';
-          document.getElementById('tt-max').textContent = s.maxOpac + '%';
-          document.getElementById('tt-val').textContent = fmtBig(s.valor + '');
-        })
-        .on('mousemove', function (e) { const r = cont.getBoundingClientRect(); tt.style.left = (e.clientX - r.left + 12) + 'px'; tt.style.top = (e.clientY - r.top - 10) + 'px'; })
-        .on('mouseout', function () { d3.select(this).attr('opacity', 1); tt.style.display = 'none'; })
-        .on('click', function (e, f) {
-          const d = normD(featN(f));
-          const match = Object.keys(PD).find(k => normD(k) === d);
-          if (match) { fDepto = match; const sel = document.getElementById('fd'); if (sel) { sel.value = match; } renderCases(); }
+
+      // Separar San Andrés del continente para proyectarlos por separado
+      const SAN_ANDRES_NAMES = new Set(['SAN ANDRES']);
+      const featSanAndres = geo.features.filter(f => SAN_ANDRES_NAMES.has(normD(featN(f))));
+      const featContinente = geo.features.filter(f => !SAN_ANDRES_NAMES.has(normD(featN(f))));
+
+      // ── DOS SUB-INSETS: Providencia (arriba) y San Andrés (abajo) ──
+      // Providencia está al norte (~13.4°N), San Andrés al sur (~12.5°N)
+      const INSET_W = 80, INSET_PAD = 8;
+      const SUB_H_PROV = 48;  // Providencia es más pequeña
+      const SUB_H_SA = 62;  // San Andrés es mayor
+      const SUB_GAP = 14;  // espacio entre los dos recuadros (incluye label)
+      const TOTAL_H = SUB_H_PROV + SUB_GAP + SUB_H_SA;
+
+      // Origen del bloque de insets: esquina superior izquierda
+      const ix = INSET_PAD;
+      const iy_prov_lbl = INSET_PAD;                           // y del label "Providencia"
+      const iy_prov = iy_prov_lbl + 11;                    // y del recuadro Providencia
+      const iy_sa_lbl = iy_prov + SUB_H_PROV + 4;           // y del label "San Andrés"
+      const iy_sa = iy_sa_lbl + 10;                      // y del recuadro San Andrés
+
+      // Proyección del continente: ceder columna izquierda a los insets
+      const CONT_X0 = INSET_W + INSET_PAD * 2 + 4;
+      const CONT_Y0 = 0;
+      const projMain = d3.geoMercator().fitExtent([[CONT_X0, CONT_Y0], [W, H]], { type: 'FeatureCollection', features: featContinente });
+      const pathMain = d3.geoPath(projMain);
+
+      // Función auxiliar para color de feature
+      function featColor(f) {
+        const d = normD(featN(f));
+        const s = risk[d];
+        return (!s || s.n === 0) ? '#1f2333' : col(s.maxOpac);
+      }
+      // Función auxiliar para hover
+      function onHover(e, f) {
+        d3.select(this).attr('opacity', 0.75);
+        const raw = featN(f), d = normD(raw), s = risk[d] || { n: 0, opacSum: 0, maxOpac: 0, valor: 0 };
+        const avg = s.n > 0 ? (s.opacSum / s.n).toFixed(0) : 0;
+        tt.style.display = 'block';
+        document.getElementById('tt-name').textContent = raw || d;
+        document.getElementById('tt-n').textContent = s.n;
+        document.getElementById('tt-avg').textContent = avg + '%';
+        document.getElementById('tt-max').textContent = s.maxOpac + '%';
+        document.getElementById('tt-val').textContent = fmtBig(s.valor + '');
+      }
+      function onMove(e) {
+        const r = cont.getBoundingClientRect();
+        tt.style.left = (e.clientX - r.left + 12) + 'px';
+        tt.style.top = (e.clientY - r.top - 10) + 'px';
+      }
+      function onOut() { d3.select(this).attr('opacity', 1); tt.style.display = 'none'; }
+      function onClick(e, f) {
+        const d = normD(featN(f));
+        const canonical = ALL_DEPTOS.find(x => normD(x) === d) || d;
+        fDepto = canonical;
+        const sel = document.getElementById('fd');
+        if (sel) sel.value = canonical;
+        renderCases();
+      }
+
+      // Dibujar departamentos continentales
+      svg.selectAll('path.dept').data(featContinente).enter().append('path')
+        .attr('class', 'dept')
+        .attr('d', pathMain)
+        .attr('fill', featColor)
+        .attr('stroke', '#0d0f14').attr('stroke-width', 0.7)
+        .attr('cursor', 'pointer').style('transition', 'opacity .15s')
+        .on('mouseover', onHover)
+        .on('mousemove', onMove)
+        .on('mouseout', onOut)
+        .on('click', onClick);
+
+      // ── Dibujar los dos sub-insets ─────────────────────────
+      // Helper: dibuja un sub-inset dado un conjunto de features y coordenadas
+      function drawSubInset(feats, label, bx, by, bw, bh, idx) {
+        // Label
+        svg.append('text')
+          .attr('x', bx + bw / 2).attr('y', by - 2)
+          .attr('text-anchor', 'middle')
+          .attr('font-size', 7).attr('fill', '#5a6280')
+          .attr('font-family', "'DM Sans',sans-serif")
+          .text(label);
+        // Marco
+        svg.append('rect')
+          .attr('x', bx - 1).attr('y', by)
+          .attr('width', bw + 2).attr('height', bh + 2)
+          .attr('rx', 4).attr('ry', 4)
+          .attr('fill', '#0f111a').attr('stroke', '#2a2d3e').attr('stroke-width', 1);
+
+        if (feats.length > 0) {
+          const proj = d3.geoMercator()
+            .fitExtent([[bx + 2, by + 2], [bx + bw - 2, by + bh - 2]],
+              { type: 'FeatureCollection', features: feats });
+          const path = d3.geoPath(proj);
+          svg.selectAll(`path.si-${idx}`).data(feats).enter().append('path')
+            .attr('class', `si-${idx}`)
+            .attr('d', path)
+            .attr('fill', featColor)
+            .attr('stroke', '#0d0f14').attr('stroke-width', 0.5)
+            .attr('cursor', 'pointer').style('transition', 'opacity .15s')
+            .on('mouseover', onHover)
+            .on('mousemove', onMove)
+            .on('mouseout', onOut)
+            .on('click', onClick);
+        } else {
+          // Fallback: cuadro de color + texto
+          const saRisk = risk['SAN ANDRES'];
+          const saFill = (!saRisk || saRisk.n === 0) ? '#1f2333' : col(saRisk.maxOpac);
+          svg.append('rect')
+            .attr('x', bx + 4).attr('y', by + 6)
+            .attr('width', bw - 8).attr('height', bh - 12)
+            .attr('rx', 3).attr('fill', saFill).attr('stroke', '#2a2d3e').attr('stroke-width', 0.5)
+            .attr('cursor', 'pointer')
+            .on('click', () => {
+              fDepto = 'SAN ANDRES';
+              const sel = document.getElementById('fd');
+              if (sel) sel.value = 'SAN ANDRES';
+              renderCases();
+            });
+          svg.append('text')
+            .attr('x', bx + bw / 2).attr('y', by + bh / 2 + 3)
+            .attr('text-anchor', 'middle')
+            .attr('font-size', 6.5).attr('fill', '#9ba3bc')
+            .text('Sin geom.');
+        }
+      }
+
+      if (featSanAndres.length > 0) {
+        // Explotar la geometría en polígonos individuales
+        const polyFeats = [];
+        featSanAndres.forEach(f => {
+          const g = f.geometry;
+          if (!g) return;
+          if (g.type === 'Polygon') {
+            polyFeats.push({ type: 'Feature', geometry: g, properties: f.properties });
+          } else if (g.type === 'MultiPolygon') {
+            g.coordinates.forEach(coords => {
+              polyFeats.push({ type: 'Feature', geometry: { type: 'Polygon', coordinates: coords }, properties: f.properties });
+            });
+          }
         });
+
+        // Clasificar por latitud del centroide: ≥13°N → Providencia, <13°N → San Andrés
+        const SPLIT_LAT = 13.0;
+        const provFeats = polyFeats.filter(f => d3.geoCentroid(f)[1] >= SPLIT_LAT);
+        const saFeats = polyFeats.filter(f => d3.geoCentroid(f)[1] < SPLIT_LAT);
+
+        // Sub-inset 1: Providencia (norte, arriba)
+        drawSubInset(provFeats.length > 0 ? provFeats : featSanAndres,
+          'Providencia y Sta. Catalina', ix, iy_prov, INSET_W, SUB_H_PROV, 'prov');
+
+        // Sub-inset 2: San Andrés (sur, abajo)
+        drawSubInset(saFeats.length > 0 ? saFeats : featSanAndres,
+          'San Andrés', ix, iy_sa, INSET_W, SUB_H_SA, 'sa');
+      } else {
+        // Sin geometría: dos placeholders
+        drawSubInset([], 'Providencia y Sta. Catalina', ix, iy_prov, INSET_W, SUB_H_PROV, 'prov');
+        drawSubInset([], 'San Andrés', ix, iy_sa, INSET_W, SUB_H_SA, 'sa');
+      }
+
+      // Línea decorativa que conecta los insets con el continente
+      const midY = (iy_prov + SUB_H_PROV + iy_sa + SUB_H_SA) / 2;
+      svg.append('line')
+        .attr('x1', ix + INSET_W + 1).attr('y1', midY)
+        .attr('x2', CONT_X0 - 4).attr('y2', midY)
+        .attr('stroke', '#2a2d3e').attr('stroke-width', 1).attr('stroke-dasharray', '3,2');
     }
 
     // ── MAP + CASES SECTION ────────────────────────────────
+    // Lista completa de los 33 departamentos de Colombia
+    const ALL_DEPTOS = [
+      'AMAZONAS', 'ANTIOQUIA', 'ARAUCA', 'ATLANTICO', 'BOGOTA D.C.',
+      'BOLIVAR', 'BOYACA', 'CALDAS', 'CAQUETA', 'CASANARE',
+      'CAUCA', 'CESAR', 'CHOCO', 'CORDOBA', 'CUNDINAMARCA',
+      'GUAINIA', 'GUAVIARE', 'HUILA', 'LA GUAJIRA', 'MAGDALENA',
+      'META', 'NARINO', 'NORTE DE SANTANDER', 'PUTUMAYO', 'QUINDIO',
+      'RISARALDA', 'SAN ANDRES', 'SANTANDER', 'SUCRE', 'TOLIMA',
+      'VALLE DEL CAUCA', 'VAUPES', 'VICHADA'
+    ];
+
     function buildMapSection() {
-      const deptos = [...new Set(ALL.map(c => c.Departamento))].sort();
+      // Detectar qué departamentos tienen datos reales (para mostrar indicador)
+      const deptosConDatos = new Set(ALL.map(c => normD(c.Departamento)).filter(Boolean));
       return `
   <div class="slabel" style="margin-top:16px;"><div class="si" style="background:var(--blue-bg)">🗺️</div><span class="st">Mapa de riesgo · Casos detectados</span></div>
   <div class="row row-map">
@@ -285,7 +537,7 @@
         </select>
         <select id="fd" onchange="fDepto=this.value;renderCases()">
           <option value="">Todos los dptos.</option>
-          ${deptos.map(d => `<option value="${d}">${d}</option>`).join('')}
+          ${ALL_DEPTOS.map(d => `<option value="${d}">${d}</option>`).join('')}
         </select>
       </div>
       <div class="cases-list" id="cases-list" style="flex:1;overflow-y:auto;"></div>
@@ -319,7 +571,8 @@
       if (fNivel === 'alta') list = list.filter(c => c.porcentaje_corrupcion_estimado >= 80);
       else if (fNivel === 'media') list = list.filter(c => c.porcentaje_corrupcion_estimado >= 50 && c.porcentaje_corrupcion_estimado < 80);
       else if (fNivel === 'baja') list = list.filter(c => c.porcentaje_corrupcion_estimado < 50);
-      if (fDepto) list = list.filter(c => c.Departamento === fDepto);
+      // Filtrar por departamento: comparar normalizados para soportar cualquier variante de la API
+      if (fDepto) list = list.filter(c => normD(c.Departamento) === normD(fDepto));
       list.sort((a, b) => b.porcentaje_corrupcion_estimado - a.porcentaje_corrupcion_estimado);
       document.getElementById('cases-badge').textContent = list.length + ' casos';
       document.getElementById('cases-list').innerHTML = list.slice(0, 50).map((c) => {
