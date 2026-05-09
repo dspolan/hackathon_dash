@@ -42,7 +42,7 @@
   </div>
 
   <footer class="ftr">
-    <span>GobIA · Análisis de contratación pública Colombia · Datos reales de <a href="https://www.datos.gov.co"
+    <span>tobaru · Análisis de contratación pública Colombia · Datos reales de <a href="https://www.datos.gov.co"
         target="_blank">datos.gov.co</a></span>
     <span>API: <a href="https://gobiapi.tobaru.xyz/api/leaderboard/gobia" target="_blank">gobiapi.tobaru.xyz</a></span>
   </footer>
@@ -98,28 +98,74 @@
     let fNivel = '', fDepto = '', selCase = null, activeTab = 0, sortK = 'corruption', sortD = -1, srchQ = '';
 
     function processData(data) {
-      // La API retorna { agente, descripcion, leaderboard: { ... } }
-      LB = data.leaderboard || data;
+      // La API retorna { agente, descripcion, resultados: [...] }
+      // o el formato antiguo { agente, leaderboard: { mayor_indice_corrupcion, ... } }
+      const resultados = data.resultados || [];
+      const leaderboardBase = data.leaderboard || {};
+
+      // Extraer contratos de resultados[] si no hay leaderboard clásico
+      const contractsFromResultados = resultados.map(r => r.contrato).filter(Boolean);
+
+      // Construir ALL: primero del leaderboard clásico, luego de resultados
       ALL = []; PD = {};
       const seen = new Set();
-      const lists = [
-        ...(LB.mayor_indice_corrupcion || []),
-        ...(LB.contratos_recomendados || []),
-        ...(LB.mejor_confiabilidad_precio || []),
-        ...(LB.mejores_contratos_generales || []),
+      const classicLists = [
+        ...(leaderboardBase.mayor_indice_corrupcion || []),
+        ...(leaderboardBase.contratos_recomendados || []),
+        ...(leaderboardBase.mejor_confiabilidad_precio || []),
+        ...(leaderboardBase.mejores_contratos_generales || []),
       ];
-      lists.forEach(c => {
+      [...classicLists, ...contractsFromResultados].forEach(c => {
         const id = c['ID Contrato'];
-        if (!seen.has(id)) { seen.add(id); ALL.push(c); }
+        if (id && !seen.has(id)) { seen.add(id); ALL.push(c); }
       });
+
+      // Construir LB: si existe el leaderboard clásico úsalo, si no, sintetízalo desde resultados
+      if (leaderboardBase.mayor_indice_corrupcion) {
+        LB = leaderboardBase;
+      } else {
+        // Sintetizar categorías desde los datos de resultados
+        const sorted = [...ALL].sort((a, b) => b.porcentaje_corrupcion_estimado - a.porcentaje_corrupcion_estimado);
+        const sortedRec = [...ALL].sort((a, b) => (b.score_recomendacion || 0) - (a.score_recomendacion || 0));
+        const sortedConf = [...ALL].sort((a, b) => (b.score_confiabilidad_precio || 0) - (a.score_confiabilidad_precio || 0));
+        const sortedGen = [...ALL].sort((a, b) => (b.score_general || 0) - (a.score_general || 0));
+        LB = {
+          mayor_indice_corrupcion: sorted,
+          contratos_recomendados: sortedRec,
+          mejor_confiabilidad_precio: sortedConf,
+          mejores_contratos_generales: sortedGen,
+          // Sintetizar contratistas desde los contratos disponibles
+          contratistas_mejor_historial: ALL.reduce((acc, c) => {
+            const p = c['Proveedor Adjudicado'] || 'Desconocido';
+            let entry = acc.find(e => e['Proveedor Adjudicado'] === p);
+            if (!entry) {
+              entry = { 'Proveedor Adjudicado': p, contratos: 0, departamentos: 0, entidades: 0,
+                        opacidad_promedio: 0, valor_total: 0, score_historial: c.score_historial || 50,
+                        _deptos: new Set(), _ents: new Set(), _opacSum: 0 };
+              acc.push(entry);
+            }
+            entry.contratos++;
+            entry._deptos.add(c.Departamento);
+            entry._ents.add(c['Nombre Entidad']);
+            entry._opacSum += (c.porcentaje_corrupcion_estimado || 0);
+            entry.valor_total += parseFloat((c['Valor del Contrato'] || '0').replace(/[$,]/g, ''));
+            return acc;
+          }, []).map(e => ({ ...e, departamentos: e._deptos.size, entidades: e._ents.size, opacidad_promedio: e._opacSum / e.contratos }))
+                  .sort((a, b) => (b.score_historial || 0) - (a.score_historial || 0))
+        };
+      }
+
+      // Construir mapa de departamentos
       ALL.forEach(c => {
         const d = c.Departamento;
+        if (!d) return;
         if (!PD[d]) PD[d] = { n: 0, opacSum: 0, maxOpac: 0, valor: 0 };
-        PD[d].n++; PD[d].opacSum += c.porcentaje_corrupcion_estimado;
+        PD[d].n++; PD[d].opacSum += (c.porcentaje_corrupcion_estimado || 0);
         PD[d].valor += parseFloat((c['Valor del Contrato'] || '0').replace(/[$,]/g, ''));
-        if (c.porcentaje_corrupcion_estimado > PD[d].maxOpac) PD[d].maxOpac = c.porcentaje_corrupcion_estimado;
+        if ((c.porcentaje_corrupcion_estimado || 0) > PD[d].maxOpac) PD[d].maxOpac = c.porcentaje_corrupcion_estimado;
       });
-      // Mostrar descripción del agente en el header si está disponible
+
+      // Mostrar agente en el header
       if (data.agente) {
         const el = document.getElementById('api-agent');
         if (el) el.textContent = data.agente;
@@ -128,12 +174,17 @@
 
     // ── KPIs ──────────────────────────────────────────────
     function buildKPIs() {
+      const mic = (LB.mayor_indice_corrupcion || [])[0] || null;
+      const cr  = (LB.contratos_recomendados || [])[0] || null;
+      const cmh = (LB.contratistas_mejor_historial || [])[0] || null;
+      const mcp = (LB.mejor_confiabilidad_precio || [])[0] || null;
+      const mcg = (LB.mejores_contratos_generales || [])[0] || null;
       const kpis = [
-        { icon: '⚠️', bg: 'var(--red-bg)', label: 'Mayor opacidad', val: LB.mayor_indice_corrupcion[0].porcentaje_corrupcion_estimado + '%', col: 'var(--red)', sub: tc(LB.mayor_indice_corrupcion[0]['ID Contrato'], 24) },
-        { icon: '✅', bg: 'var(--green-bg)', label: 'Top recomendado', val: LB.contratos_recomendados[0].score_recomendacion.toFixed(1), col: 'var(--green)', sub: tc(LB.contratos_recomendados[0]['ID Contrato'], 24) },
-        { icon: '🏆', bg: 'var(--blue-bg)', label: 'Mejor contratista', val: LB.contratistas_mejor_historial[0].score_historial.toFixed(1), col: 'var(--blue)', sub: tc(LB.contratistas_mejor_historial[0]['Proveedor Adjudicado'], 24) },
-        { icon: '💰', bg: 'var(--teal-bg)', label: 'Mejor conf./precio', val: LB.mejor_confiabilidad_precio[0].score_confiabilidad_precio.toFixed(1), col: 'var(--teal)', sub: tc(LB.mejor_confiabilidad_precio[0]['ID Contrato'], 24) },
-        { icon: '⭐', bg: 'var(--purple-bg)', label: 'Mejor score general', val: LB.mejores_contratos_generales[0].score_general.toFixed(1), col: 'var(--purple)', sub: tc(LB.mejores_contratos_generales[0]['ID Contrato'], 24) },
+        { icon: '⚠️', bg: 'var(--red-bg)',    label: 'Mayor opacidad',     col: 'var(--red)',    val: mic ? mic.porcentaje_corrupcion_estimado + '%' : '—', sub: mic ? tc(mic['ID Contrato'], 24) : 'Sin datos' },
+        { icon: '✅', bg: 'var(--green-bg)',  label: 'Top recomendado',    col: 'var(--green)',  val: cr  ? (cr.score_recomendacion || 0).toFixed(1) : '—', sub: cr  ? tc(cr['ID Contrato'], 24) : 'Sin datos' },
+        { icon: '🏆', bg: 'var(--blue-bg)',   label: 'Mejor contratista',  col: 'var(--blue)',   val: cmh ? (cmh.score_historial || 0).toFixed(1) : '—', sub: cmh ? tc(cmh['Proveedor Adjudicado'], 24) : 'Sin datos' },
+        { icon: '💰', bg: 'var(--teal-bg)',   label: 'Mejor conf./precio', col: 'var(--teal)',   val: mcp ? (mcp.score_confiabilidad_precio || 0).toFixed(1) : '—', sub: mcp ? tc(mcp['ID Contrato'], 24) : 'Sin datos' },
+        { icon: '⭐', bg: 'var(--purple-bg)', label: 'Mejor score general',col: 'var(--purple)', val: mcg ? (mcg.score_general || 0).toFixed(1) : '—', sub: mcg ? tc(mcg['ID Contrato'], 24) : 'Sin datos' },
       ];
       return `
   <div class="slabel"><div class="si" style="background:var(--accent-bg)">📊</div><span class="st">Resumen ejecutivo</span><span class="pbadge" style="margin-left:4px;">${ALL.length} contratos · ${Object.keys(PD).length} departamentos</span></div>
@@ -390,11 +441,69 @@
   </div>`;
     }
 
+    // ── CLASIFICACIONES (resultados) ───────────────────────
+    let LB_RESULTS = [];
+    function buildLeaderboard(resultados) {
+      LB_RESULTS = resultados || [];
+      if (!LB_RESULTS.length) return '';
+      const PALETTE = [
+        { bg: 'var(--red-bg)',    tc: 'var(--red)',    b: 'var(--red-b)' },
+        { bg: 'var(--amber-bg)', tc: 'var(--amber)',  b: 'var(--amber-b)' },
+        { bg: 'var(--blue-bg)',  tc: 'var(--blue)',   b: 'var(--blue-b)' },
+        { bg: 'var(--green-bg)', tc: 'var(--green)',  b: 'var(--green-b)' },
+        { bg: 'var(--teal-bg)',  tc: 'var(--teal)',   b: 'var(--teal-b)' },
+      ];
+      function rp(i) { const p = PALETTE[i % PALETTE.length]; return p; }
+      const rows = LB_RESULTS.map((item, i) => {
+        const c = item.contrato || {};
+        const a = item.analisis_llm || {};
+        const nivel = (a.nivel || 'medio').toLowerCase();
+        const riesgo = a.porcentaje_riesgo || c.porcentaje_corrupcion_estimado || 0;
+        const p = rp(i);
+        const alertas = (c.alertas || '').split(',').map(s => s.trim()).filter(Boolean);
+        const nivelLabel = nivel === 'critico' ? '🔴 Crítico' : nivel === 'alto' ? '🟠 Alto' : nivel === 'medio' ? '🟡 Medio' : '🟢 Bajo';
+        return `<tr>
+          <td><span class="lb-rank" style="background:${p.bg};color:${p.tc};border-color:${p.b};">${i + 1}</span></td>
+          <td><span class="lb-nivel ${nivel}">${nivelLabel}</span></td>
+          <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent2);">${c['ID Contrato'] || '—'}</td>
+          <td style="font-size:10px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tc(c['Nombre Entidad'], 30)}</td>
+          <td style="font-size:10px;">${tc(c.Departamento, 18)}</td>
+          <td style="font-size:10px;">${tc(c['Tipo de Contrato'], 18)}</td>
+          <td style="font-family:'DM Mono',monospace;font-size:10px;text-align:right;">${fmtBig(c['Valor del Contrato'])}</td>
+          <td style="text-align:center;">
+            <span class="sbadge" style="background:${riesgo>=80?'var(--red-bg)':riesgo>=50?'var(--amber-bg)':'var(--green-bg)'};
+              color:${riesgo>=80?'var(--red)':riesgo>=50?'var(--amber)':'var(--green)'};
+              border:1px solid ${riesgo>=80?'var(--red-b)':riesgo>=50?'var(--amber-b)':'var(--green-b)'}">${riesgo}%</span>
+          </td>
+          <td>
+            <div class="lb-alerts">
+              ${alertas.slice(0,3).map(al => `<span class="lb-alert-tag">${al}</span>`).join('')}
+              ${alertas.length > 3 ? `<span class="lb-alert-tag">+${alertas.length-3}</span>` : ''}
+            </div>
+          </td>
+          <td><a href="${c.URLProceso || '#'}" target="_blank" style="color:var(--accent2);font-size:11px;text-decoration:none;">Ver →</a></td>
+        </tr>`;
+      }).join('');
+      return `
+  <div class="slabel" style="margin-top:16px;"><div class="si" style="background:var(--red-bg)">🏛️</div><span class="st">Clasificaciones GobIA · Análisis LLM</span><span class="pbadge" style="margin-left:4px;">${LB_RESULTS.length} contratos auditados</span></div>
+  <div class="panel" style="margin-bottom:16px;">
+    <div class="ph"><div class="pt">📋 Ranking de opacidad · Auditoría LLM</div><span class="pbadge">Análisis detallado por contrato</span></div>
+    <div class="lb-table-wrap">
+      <table class="lb-table">
+        <thead><tr>
+          <th>#</th><th>Nivel</th><th>Contrato</th><th>Entidad</th><th>Dpto.</th><th>Tipo</th><th style="text-align:right;">Valor</th><th style="text-align:center;">Riesgo</th><th>Alertas</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+    }
+
     // ── LEADERBOARD TABS ───────────────────────────────────
     function buildTabs() {
       const tabs = ['⚠️ Mayor Riesgo', '✅ Recomendados', '🏆 Contratistas', '💰 Conf./Precio', '⭐ Mejor General'];
       return `
-  <div class="slabel" style="margin-top:16px;"><div class="si" style="background:var(--purple-bg)">🏅</div><span class="st">Leaderboard GobIA</span></div>
+  <div class="slabel" style="margin-top:16px;"><div class="si" style="background:var(--purple-bg)">🏅</div><span class="st">Leaderboard tobaru</span></div>
   <div class="tabs" id="tabs-bar">${tabs.map((t, i) => `<button class="tab${i === activeTab ? ' on' : ''}" onclick="switchTab(${i})">${t}</button>`).join('')}</div>
   <div id="tab-content"></div>`;
     }
@@ -563,7 +672,9 @@
         const res = await fetch(API, { method: 'GET', mode: 'cors', headers: { 'Accept': 'application/json' } });
         if (!res.ok) throw new Error('HTTP ' + res.status + ' — ' + res.statusText);
         const data = await res.json();
-        if (!data || (!data.leaderboard && !data.mayor_indice_corrupcion)) {
+        // Acepta: { leaderboard:{...} } o { resultados:[...] } o { mayor_indice_corrupcion:[...] }
+        const hasData = data && (data.leaderboard || data.resultados || data.mayor_indice_corrupcion);
+        if (!hasData) {
           throw new Error('Estructura de datos inesperada en la respuesta');
         }
         processData(data);
@@ -572,11 +683,13 @@
         // Mostrar nombre del agente
         const agEl = document.getElementById('api-agent');
         if (agEl) { agEl.style.display = 'block'; }
+        const resultados = data.resultados || [];
         document.getElementById('app').innerHTML =
           buildKPIs() +
           buildMapSection() +
           buildDetailSection() +
           buildCharts() +
+          buildLeaderboard(resultados) +
           buildTabs() +
           buildFullTable();
         renderCases();
@@ -594,6 +707,191 @@
       }
     }
     init();
+  </script>
+
+  <!-- ── CHATBOT WIDGET ─────────────────────────────────── -->
+  <button id="chat-fab" aria-label="Abrir GobIA Chat" onclick="chatToggle()">
+    <img src="imagenes/marca.png" alt="GobIA"
+      onerror="this.style.display='none';document.getElementById('chat-fab-fallback').style.display='flex';">
+    <span id="chat-fab-fallback" class="chat-fab-fallback" style="display:none;">🤖</span>
+    <span class="chat-fab-badge"></span>
+  </button>
+
+  <div id="chat-window" role="dialog" aria-label="GobIA Auditor Chat">
+    <!-- Header -->
+    <div class="chat-header">
+      <img src="imagenes/marca.png" alt="GobIA" class="chat-header-logo"
+        onerror="this.style.display='none';document.getElementById('chat-logo-fallback').style.display='flex';">
+      <div id="chat-logo-fallback" class="chat-header-logo-fallback" style="display:none;">G</div>
+      <div class="chat-header-info">
+        <div class="chat-header-title">🤖 GobIA Auditor</div>
+        <div class="chat-header-sub">Análisis de contratación pública · Colombia</div>
+      </div>
+      <button class="chat-close-btn" onclick="chatToggle()" aria-label="Cerrar">✕</button>
+    </div>
+    <!-- Messages -->
+    <div class="chat-messages" id="chat-messages"></div>
+    <!-- Input -->
+    <div class="chat-input-row">
+      <textarea id="chat-input" rows="1" placeholder="Escribe tu pregunta…"
+        onkeydown="chatKeyDown(event)" oninput="chatAutoResize(this)"></textarea>
+      <button id="chat-send-btn" onclick="chatSend()" aria-label="Enviar">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <!-- Ping status bar -->
+    <div class="chat-ping-bar">
+      <span class="chat-ping-dot checking" id="chat-ping-dot"></span>
+      <span id="chat-ping-txt">Verificando conexión…</span>
+    </div>
+  </div>
+
+  <script>
+    // ── CHATBOT CONFIG ────────────────────────────────────
+    const CHAT_BASE = 'https://gobiapi.tobaru.xyz';
+    const CHAT_URL  = CHAT_BASE + '/api/chat';
+    const PING_URL  = CHAT_BASE + '/api/ping';
+
+    let chatOpen    = false;
+    let chatBusy    = false;
+    let pingOk      = false;
+
+    // ── TOGGLE ────────────────────────────────────────────
+    function chatToggle() {
+      chatOpen = !chatOpen;
+      const win = document.getElementById('chat-window');
+      win.classList.toggle('open', chatOpen);
+      if (chatOpen) {
+        // First open: add welcome message + ping
+        const msgs = document.getElementById('chat-messages');
+        if (!msgs.children.length) {
+          chatAddBubble('bot', '¡Hola! Soy <strong>GobIA Auditor</strong>, tu asistente de análisis de contratación pública en Colombia. 🇨🇴<br><br>Puedes preguntarme sobre contratos, indicadores de opacidad, entidades contratantes o cualquier dato del leaderboard.');
+          chatPing();
+        }
+        setTimeout(() => document.getElementById('chat-input').focus(), 220);
+      }
+    }
+
+    // ── PING (mirrors Python: GET /api/ping) ─────────────
+    async function chatPing() {
+      const dot = document.getElementById('chat-ping-dot');
+      const txt = document.getElementById('chat-ping-txt');
+      dot.className = 'chat-ping-dot checking';
+      txt.textContent = 'Verificando conexión…';
+      try {
+        const r = await fetch(PING_URL, { method: 'GET', mode: 'cors' });
+        if (r.ok) {
+          pingOk = true;
+          dot.className = 'chat-ping-dot';
+          txt.textContent = 'API activa · gobiapi.tobaru.xyz';
+        } else {
+          throw new Error('HTTP ' + r.status);
+        }
+      } catch (e) {
+        pingOk = false;
+        dot.className = 'chat-ping-dot error';
+        txt.textContent = 'Sin conexión con la API (' + e.message + ')';
+      }
+    }
+
+    // ── SEND (mirrors Python: GET ping → POST /api/chat) ──
+    async function chatSend() {
+      if (chatBusy) return;
+      const input = document.getElementById('chat-input');
+      const mensaje = (input.value || '').trim();
+      if (!mensaje) return;
+
+      // Exit words (mirrors Python)
+      if (['salir','exit','quit'].includes(mensaje.toLowerCase())) {
+        chatToggle(); return;
+      }
+
+      input.value = '';
+      chatAutoResize(input);
+      chatAddBubble('user', escHtml(mensaje));
+      chatBusy = true;
+      document.getElementById('chat-send-btn').disabled = true;
+
+      // Show typing indicator
+      const typingId = chatAddTyping();
+
+      try {
+        // Step 1: Ping (mirrors Python)
+        await chatPing();
+
+        // Step 2: POST /api/chat with {"mensaje": mensaje}
+        const resp = await fetch(CHAT_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ mensaje })
+        });
+
+        chatRemoveTyping(typingId);
+
+        if (!resp.ok) {
+          const errTxt = await resp.text().catch(() => '');
+          chatAddBubble('error', `⚠️ Error ${resp.status}: ${escHtml(errTxt.slice(0, 200))}`);
+        } else {
+          const data = await resp.json();
+          // Mirrors Python: data.get("respuesta", "Sin respuesta")
+          const respuesta = data.respuesta || 'Sin respuesta';
+          chatAddBubble('bot', escHtml(respuesta).replace(/\n/g, '<br>'));
+        }
+
+      } catch (e) {
+        chatRemoveTyping(typingId);
+        chatAddBubble('error', '⚠️ Error de conexión: ' + escHtml(e.message));
+      }
+
+      chatBusy = false;
+      document.getElementById('chat-send-btn').disabled = false;
+      input.focus();
+    }
+
+    // ── HELPERS ───────────────────────────────────────────
+    function chatAddBubble(type, html) {
+      const msgs = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = 'chat-bubble ' + type;
+      div.innerHTML = html;
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div;
+    }
+
+    function chatAddTyping() {
+      const msgs = document.getElementById('chat-messages');
+      const id = 'typing-' + Date.now();
+      const div = document.createElement('div');
+      div.className = 'chat-typing';
+      div.id = id;
+      div.innerHTML = '<div class="chat-dot"></div><div class="chat-dot"></div><div class="chat-dot"></div>';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return id;
+    }
+
+    function chatRemoveTyping(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function chatKeyDown(e) {
+      // Send on Enter (not Shift+Enter)
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); chatSend(); }
+    }
+
+    function chatAutoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+    }
   </script>
 </body>
 
