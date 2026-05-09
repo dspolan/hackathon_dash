@@ -1263,7 +1263,7 @@
     }
 
     // ── NOTIFICATION SYSTEM ────────────────────────────────
-    const REFRESH_MS = 5 * 60 * 1000;  // refresco cada 5 minutos
+    const REFRESH_MS = 10 * 60 * 1000;  // refresco cada 5 minutos
     let notifList = [];
     let notifUnread = 0;
     let prevContractIds = new Set();
@@ -1703,6 +1703,167 @@
       el.style.height = Math.min(el.scrollHeight, 80) + 'px';
     }
   </script>
+
+  <!-- ── FOOTER LEGAL ────────────────────────────────────── -->
+  <footer id="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="imagenes/marca.png" alt="GobIA" class="footer-logo" onerror="this.style.display='none'">
+        <span class="footer-brand-name">GobIA · Tobaru S.A.S.</span>
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-legal">
+        <div class="footer-legal-icon">⚖️</div>
+        <div class="footer-legal-text">
+          <span class="footer-legal-title">Tratamiento de Datos Personales — Marco Legal Colombia</span>
+          <p>
+            El tratamiento de datos personales realizado en este portal se efectúa en cumplimiento de la
+            <strong>Ley 1581 de 2012</strong> y el <strong>Decreto 1377 de 2013</strong>, garantizando la
+            protección, confidencialidad, integridad y uso adecuado de la información suministrada por los titulares.
+          </p>
+        </div>
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-bottom">
+        <span>© <span id="footer-year"></span> Tobaru S.A.S. · Todos los derechos reservados.</span>
+        <span class="footer-tags">
+          <span class="footer-tag">🇨🇴 Colombia</span>
+          <span class="footer-tag">SECOP II</span>
+          <span class="footer-tag">Ley 1581/2012</span>
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    /* ── FOOTER ── */
+    #site-footer {
+      width: 100%;
+      background: var(--surface1, #12141f);
+      border-top: 1px solid rgba(124, 58, 237, 0.2);
+      margin-top: 32px;
+      padding: 28px 0 18px;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: contain;
+    }
+
+    .footer-brand-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text1, #e8eaf0);
+      letter-spacing: .02em;
+    }
+
+    .footer-divider {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(124, 58, 237, .25) 0%, rgba(45, 212, 191, .15) 100%);
+      border: none;
+    }
+
+    .footer-legal {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .footer-legal-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      filter: drop-shadow(0 0 6px rgba(124, 58, 237, .5));
+    }
+
+    .footer-legal-text {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .footer-legal-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--accent2, #7c3aed);
+    }
+
+    .footer-legal-text p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text2, #9ba3bc);
+      max-width: 860px;
+    }
+
+    .footer-legal-text strong {
+      color: var(--text1, #e8eaf0);
+      font-weight: 600;
+    }
+
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text3, #5a6280);
+    }
+
+    .footer-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .footer-tag {
+      background: var(--surface2, #1a1d27);
+      border: 1px solid var(--border, rgba(255, 255, 255, .07));
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 10px;
+      color: var(--text2, #9ba3bc);
+      font-family: 'DM Mono', monospace;
+      letter-spacing: .04em;
+    }
+
+    @media (max-width: 600px) {
+      .footer-legal {
+        flex-direction: column;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+
+  <script>
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+  </script>
+
 </body>
 
 </html>
